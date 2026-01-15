@@ -51,6 +51,12 @@ export async function resetUserPassword(userId: number, newPassword: string): Pr
   })
 }
 
+export async function deleteUser(userId: number): Promise<{ message: string }> {
+  return apiRequest(`/admin/users/${userId}`, {
+    method: 'DELETE',
+  })
+}
+
 export interface CompanyConfig {
   customerDepositCents: number
   customerRescheduleFeeCents: number
@@ -97,5 +103,45 @@ export async function updateConfig(data: CompanyConfigUpdate): Promise<CompanyCo
   return apiRequest('/admin/config', {
     method: 'POST',
     body: JSON.stringify(data),
+  })
+}
+
+export interface Truck {
+  id: number
+  name: string
+  isActive: boolean
+}
+
+export interface TruckCreate {
+  name: string
+  isActive?: boolean
+}
+
+export interface TruckUpdate {
+  name?: string
+  isActive?: boolean
+}
+
+export async function getTrucks(): Promise<Truck[]> {
+  return apiRequest('/admin/trucks')
+}
+
+export async function createTruck(data: TruckCreate): Promise<Truck> {
+  return apiRequest('/admin/trucks', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateTruck(truckId: number, data: TruckUpdate): Promise<Truck> {
+  return apiRequest(`/admin/trucks/${truckId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteTruck(truckId: number): Promise<{ message: string }> {
+  return apiRequest(`/admin/trucks/${truckId}`, {
+    method: 'DELETE',
   })
 }

@@ -6,6 +6,7 @@ export interface EmployeeInfo {
   employeeNumber?: string
   hourlyRateCents: number
   isManager: boolean
+  userFullName?: string
 }
 
 export interface BookingInfo {
@@ -30,9 +31,16 @@ export interface JobCreate {
   employeeIds?: number[]
 }
 
+export interface TruckInfo {
+  id: number
+  name: string
+  isActive: boolean
+}
+
 export interface Job {
   id: number
   bookingId: number
+  truckId?: number | null
   status: string
   scheduledStartUtc: string
   actualStartUtc?: string
@@ -41,6 +49,7 @@ export interface Job {
   issueDescription?: string
   assignedCrew?: EmployeeInfo[]
   booking?: BookingInfo
+  truck?: TruckInfo | null
 }
 
 export interface JobsByDay {
@@ -90,5 +99,18 @@ export async function assignCrew(jobId: number, employeeIds: number[]): Promise<
   return apiRequest(`/jobs/${jobId}/crew`, {
     method: 'POST',
     body: JSON.stringify({ employeeIds }),
+  })
+}
+
+export interface JobUpdate {
+  notes?: string
+  issueDescription?: string
+  truckId?: number | null
+}
+
+export async function updateJob(jobId: number, data: JobUpdate): Promise<Job> {
+  return apiRequest(`/jobs/${jobId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   })
 }

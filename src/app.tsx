@@ -1,6 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/public/landingPage'
 import LoginPage from './pages/public/loginPage'
+import EstimatePage from './pages/public/estimatePage'
+import CheckoutPage from './pages/public/checkoutPage'
+import QuotePage from './pages/public/quotePage'
 import CustomerLayout from './pages/customer/customerLayout'
 import AvailabilityPage from './pages/customer/availabilityPage'
 import CreateBookingPage from './pages/customer/createBookingPage'
@@ -21,7 +24,6 @@ import CommunicationsPage from './pages/mover/communicationsPage'
 import AdminLayout from './pages/admin/adminLayout'
 import UserManagementPage from './pages/admin/userManagementPage'
 import ConfigPage from './pages/admin/configPage'
-import AvailabilityAdminPage from './pages/admin/availabilityAdminPage'
 import EmployeesAdminPage from './pages/admin/employeesAdminPage'
 import JobsAdminPage from './pages/admin/jobsAdminPage'
 import BookingsAdminPage from './pages/admin/bookingsAdminPage'
@@ -33,6 +35,10 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/estimate" element={<EstimatePage />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
+      <Route path="/quote" element={<QuotePage />} />
+      <Route path="/create-booking" element={<CreateBookingPage />} />
       
       <Route path="/customer" element={<CustomerLayout />}>
         <Route index element={<Navigate to="/customer/availability" replace />} />
@@ -64,7 +70,6 @@ export default function App() {
         <Route index element={<Navigate to="/admin/users" replace />} />
         <Route path="users" element={<UserManagementPage />} />
         <Route path="config" element={<ConfigPage />} />
-        <Route path="availability" element={<AvailabilityAdminPage />} />
         <Route path="employees" element={<EmployeesAdminPage />} />
         <Route path="bookings" element={<BookingsAdminPage />} />
         <Route path="jobs" element={<JobsAdminPage />} />

@@ -1,7 +1,180 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getConfig, updateConfig } from '../../api/adminApi'
+import { getConfig, updateConfig, getTrucks, createTruck, updateTruck, deleteTruck, Truck } from '../../api/adminApi'
 import { centsToDollars, dollarsToCents } from '../../lib/format'
+
+function TruckNamesSection() {
+  const queryClient = useQueryClient()
+  const { data: trucks, isLoading } = useQuery({
+    queryKey: ['trucks'],
+    queryFn: getTrucks,
+  })
+
+  const [editingTruck, setEditingTruck] = useState<number | null>(null)
+  const [newTruckName, setNewTruckName] = useState('')
+  const [editingTruckName, setEditingTruckName] = useState('')
+
+  const createMutation = useMutation({
+    mutationFn: createTruck,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trucks'] })
+      setNewTruckName('')
+    },
+    onError: (error: Error) => {
+      alert(`Error: ${error.message}`)
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ truckId, data }: { truckId: number; data: { name?: string; isActive?: boolean } }) =>
+      updateTruck(truckId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trucks'] })
+      setEditingTruck(null)
+      setEditingTruckName('')
+    },
+    onError: (error: Error) => {
+      alert(`Error: ${error.message}`)
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteTruck,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trucks'] })
+    },
+    onError: (error: Error) => {
+      alert(`Error: ${error.message}`)
+    },
+  })
+
+  const handleCreateTruck = () => {
+    if (!newTruckName.trim()) {
+      alert('Please enter a truck name')
+      return
+    }
+    createMutation.mutate({ name: newTruckName.trim(), isActive: true })
+  }
+
+  const handleStartEdit = (truck: Truck) => {
+    setEditingTruck(truck.id)
+    setEditingTruckName(truck.name)
+  }
+
+  const handleSaveEdit = (truckId: number) => {
+    if (!editingTruckName.trim()) {
+      alert('Please enter a truck name')
+      return
+    }
+    updateMutation.mutate({ truckId, data: { name: editingTruckName.trim() } })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingTruck(null)
+    setEditingTruckName('')
+  }
+
+  const handleToggleActive = (truck: Truck) => {
+    updateMutation.mutate({ truckId: truck.id, data: { isActive: !truck.isActive } })
+  }
+
+  const handleDeleteTruck = (truckId: number) => {
+    if (confirm('Are you sure you want to delete this truck? This cannot be undone if the truck is assigned to any jobs.')) {
+      deleteMutation.mutate(truckId)
+    }
+  }
+
+  if (isLoading) return <div className="mt-4">Loading trucks...</div>
+
+  return (
+    <div className="mt-6 pt-6 border-t">
+      <h3 className="text-lg font-semibold mb-4">Truck Names</h3>
+      <div className="space-y-2">
+        {trucks?.map((truck) => (
+          <div key={truck.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+            {editingTruck === truck.id ? (
+              <>
+                <input
+                  type="text"
+                  value={editingTruckName}
+                  onChange={(e) => setEditingTruckName(e.target.value)}
+                  className="flex-1 px-2 py-1 border rounded"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveEdit(truck.id)
+                    if (e.key === 'Escape') handleCancelEdit()
+                  }}
+                  autoFocus
+                />
+                <button
+                  onClick={() => handleSaveEdit(truck.id)}
+                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  disabled={updateMutation.isPending}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-3 py-1 bg-gray-400 text-white rounded text-sm hover:bg-gray-500"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <span className={`flex-1 ${!truck.isActive ? 'text-gray-400 line-through' : ''}`}>
+                  {truck.name}
+                </span>
+                <button
+                  onClick={() => handleToggleActive(truck)}
+                  className={`px-3 py-1 rounded text-sm ${
+                    truck.isActive
+                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  disabled={updateMutation.isPending}
+                >
+                  {truck.isActive ? 'Active' : 'Inactive'}
+                </button>
+                <button
+                  onClick={() => handleStartEdit(truck)}
+                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm hover:bg-blue-200"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDeleteTruck(truck.id)}
+                  className="px-3 py-1 bg-red-100 text-red-800 rounded text-sm hover:bg-red-200"
+                  disabled={deleteMutation.isPending}
+                >
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+        ))}
+        <div className="flex items-center gap-2 p-2">
+          <input
+            type="text"
+            value={newTruckName}
+            onChange={(e) => setNewTruckName(e.target.value)}
+            placeholder="Enter truck name"
+            className="flex-1 px-2 py-1 border rounded"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleCreateTruck()
+            }}
+          />
+          <button
+            onClick={handleCreateTruck}
+            className="px-4 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+            disabled={createMutation.isPending}
+          >
+            Add Truck
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function ConfigPage() {
   const queryClient = useQueryClient()
@@ -390,6 +563,9 @@ export default function ConfigPage() {
                 <p className="text-xs text-gray-500 mt-1">Maximum number of trucks that can be requested in a single booking</p>
               </div>
             </div>
+            
+            {/* Truck Names Management */}
+            <TruckNamesSection />
           </div>
 
           {/* Notification Settings */}

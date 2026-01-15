@@ -34,10 +34,39 @@ export interface BookingCreate {
   moveToAddress: string
   notes?: string
   depositAmountCents?: number  // Sales can override
+  // Move details - Starting location
+  fromStreetAddress?: string
+  fromZipCode?: string
+  fromPropertyType?: string
+  fromSize?: string
+  fromStories?: number
+  fromParkingDistance?: number
+  fromElevator?: boolean
+  // Move details - Final location
+  toStreetAddress?: string
+  toZipCode?: string
+  toPropertyType?: string
+  toSize?: string
+  toStories?: number
+  toParkingDistance?: number
+  toElevator?: boolean
+  // Other information
+  urgent24Hours?: boolean
+  additionalStops?: boolean
+  needsPacking?: boolean
+  specialItems?: string[]
+  estimatedHours?: number
 }
 
 export async function createBooking(data: BookingCreate): Promise<{ bookingId: number; checkoutUrl: string }> {
   return apiRequest('/bookings', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function createPublicBooking(data: BookingCreate): Promise<{ bookingId: number; checkoutUrl: string }> {
+  return apiRequest('/bookings/public', {
     method: 'POST',
     body: JSON.stringify(data),
   })
@@ -71,5 +100,30 @@ export async function rescheduleBooking(bookingId: number, data: BookingReschedu
 export async function deleteBooking(bookingId: number): Promise<{ message: string }> {
   return apiRequest(`/bookings/${bookingId}`, {
     method: 'DELETE',
+  })
+}
+
+export interface MoveEstimationRequest {
+  fromPropertyType: string
+  fromSize: string
+  fromStories: number
+  fromParkingDistance: number
+  fromElevator: boolean
+  toPropertyType: string
+  toSize: string
+  toStories: number
+  toParkingDistance: number
+  toElevator: boolean
+  urgent24Hours: boolean
+  additionalStops: boolean
+  needsPacking: boolean
+  specialItems: string[]
+  requestedTrucks: number
+}
+
+export async function estimateMoveTime(data: MoveEstimationRequest): Promise<{ estimatedHours: number }> {
+  return apiRequest('/bookings/estimate', {
+    method: 'POST',
+    body: JSON.stringify(data),
   })
 }

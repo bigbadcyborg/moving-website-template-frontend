@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getJobs, getJobsByDay, assignCrew, createJob, Job, JobCreate } from '../../api/jobsApi'
+import { getJobs, getJobsByDay, assignCrew, createJob, updateJob, Job, JobCreate } from '../../api/jobsApi'
 import { getEmployees } from '../../api/employeesApi'
 import { getAllBookings } from '../../api/bookingsApi'
+import { getTrucks, Truck } from '../../api/adminApi'
 import { formatDateTime } from '../../lib/format'
 import { Link } from 'react-router-dom'
 import { startOfMonth, endOfMonth, addMonths } from 'date-fns'
@@ -73,6 +74,11 @@ export default function JobsAdminPage() {
     queryFn: getAllBookings,
   })
 
+  const { data: trucks } = useQuery({
+    queryKey: ['trucks'],
+    queryFn: getTrucks,
+  })
+
   // Get bookings without jobs - use allJobs instead of filtered jobs
   const bookingsWithoutJobs = bookings?.filter((booking) => {
     // Filter for confirmed bookings that don't have a job
@@ -114,6 +120,19 @@ export default function JobsAdminPage() {
       setSelectedJob(null)
       setSelectedEmployeeIds([])
       alert('Crew assigned successfully')
+    },
+    onError: (error: Error) => {
+      alert(`Error: ${error.message}`)
+    },
+  })
+
+  const updateTruckMutation = useMutation({
+    mutationFn: ({ jobId, truckId }: { jobId: number; truckId: number | null }) =>
+      updateJob(jobId, { truckId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['all-jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['jobs-by-day'] })
     },
     onError: (error: Error) => {
       alert(`Error: ${error.message}`)
@@ -297,6 +316,9 @@ export default function JobsAdminPage() {
                   Crew
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Truck
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -335,7 +357,7 @@ export default function JobsAdminPage() {
                       <div className="space-y-1">
                         {job.assignedCrew.map((member) => (
                           <div key={member.id} className="text-xs">
-                            {member.employeeNumber || `Emp #${member.id}`}
+                            {member.userFullName || member.employeeNumber || `Employee #${member.id}`}
                             {member.isManager && <span className="ml-1 text-gray-500">(Mgr)</span>}
                           </div>
                         ))}
@@ -343,6 +365,24 @@ export default function JobsAdminPage() {
                     ) : (
                       <span className="text-gray-400 text-xs">No crew assigned</span>
                     )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <select
+                      value={job.truckId || ''}
+                      onChange={(e) => {
+                        const truckId = e.target.value === '' ? null : parseInt(e.target.value)
+                        updateTruckMutation.mutate({ jobId: job.id, truckId })
+                      }}
+                      className="px-2 py-1 border rounded text-sm"
+                      disabled={updateTruckMutation.isPending}
+                    >
+                      <option value="">No Truck</option>
+                      {trucks?.filter(t => t.isActive).map((truck) => (
+                        <option key={truck.id} value={truck.id}>
+                          {truck.name}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button
@@ -386,31 +426,39 @@ export default function JobsAdminPage() {
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">Select Employees</label>
               <div className="border rounded max-h-60 overflow-y-auto">
-                {employees?.map((employee) => (
-                  <label
-                    key={employee.id}
-                    className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedEmployeeIds.includes(employee.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedEmployeeIds([...selectedEmployeeIds, employee.id])
-                        } else {
-                          setSelectedEmployeeIds(selectedEmployeeIds.filter((id) => id !== employee.id))
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">
-                      {employee.userFullName || `Employee #${employee.id}`} 
-                      {employee.userEmail && ` (${employee.userEmail})`}
-                      {employee.employeeNumber && ` - ${employee.employeeNumber}`}
-                      {employee.userRole && ` - ${employee.userRole}`}
-                    </span>
-                  </label>
-                ))}
+                {!employees ? (
+                  <div className="px-3 py-2 text-sm text-gray-500">Loading employees...</div>
+                ) : employees.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-gray-500">
+                    No employees found. Please create employees in the Users tab first.
+                  </div>
+                ) : (
+                  employees.map((employee) => (
+                    <label
+                      key={employee.id}
+                      className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedEmployeeIds.includes(employee.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedEmployeeIds([...selectedEmployeeIds, employee.id])
+                          } else {
+                            setSelectedEmployeeIds(selectedEmployeeIds.filter((id) => id !== employee.id))
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">
+                        {employee.userFullName || `Employee #${employee.id}`} 
+                        {employee.userEmail && ` (${employee.userEmail})`}
+                        {employee.employeeNumber && ` - ${employee.employeeNumber}`}
+                        {employee.userRole && ` - ${employee.userRole}`}
+                      </span>
+                    </label>
+                  ))
+                )}
               </div>
             </div>
             <div className="flex gap-2">
@@ -580,31 +628,39 @@ export default function JobsAdminPage() {
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">Assign Employees (optional)</label>
               <div className="border rounded max-h-48 overflow-y-auto">
-                {employees?.map((employee) => (
-                  <label
-                    key={employee.id}
-                    className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={createJobData.employeeIds?.includes(employee.id) || false}
-                      onChange={(e) => {
-                        const currentIds = createJobData.employeeIds || []
-                        if (e.target.checked) {
-                          setCreateJobData({ ...createJobData, employeeIds: [...currentIds, employee.id] })
-                        } else {
-                          setCreateJobData({ ...createJobData, employeeIds: currentIds.filter((id) => id !== employee.id) })
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">
-                      {employee.userFullName || `Employee #${employee.id}`}
-                      {employee.employeeNumber && ` (${employee.employeeNumber})`}
-                      {employee.isManager && <span className="text-xs text-gray-500"> - Manager</span>}
-                    </span>
-                  </label>
-                ))}
+                {!employees ? (
+                  <div className="px-3 py-2 text-sm text-gray-500">Loading employees...</div>
+                ) : employees.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-gray-500">
+                    No employees found. Please create employees in the Users tab first.
+                  </div>
+                ) : (
+                  employees.map((employee) => (
+                    <label
+                      key={employee.id}
+                      className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={createJobData.employeeIds?.includes(employee.id) || false}
+                        onChange={(e) => {
+                          const currentIds = createJobData.employeeIds || []
+                          if (e.target.checked) {
+                            setCreateJobData({ ...createJobData, employeeIds: [...currentIds, employee.id] })
+                          } else {
+                            setCreateJobData({ ...createJobData, employeeIds: currentIds.filter((id) => id !== employee.id) })
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">
+                        {employee.userFullName || `Employee #${employee.id}`}
+                        {employee.employeeNumber && ` (${employee.employeeNumber})`}
+                        {employee.isManager && <span className="text-xs text-gray-500"> - Manager</span>}
+                      </span>
+                    </label>
+                  ))
+                )}
               </div>
             </div>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getUsers, createUser, updateUser, resetUserPassword, User, UserCreate, UserUpdate } from '../../api/adminApi'
+import { getUsers, createUser, updateUser, resetUserPassword, deleteUser, User, UserCreate, UserUpdate } from '../../api/adminApi'
+import { getCurrentUser } from '../../api/authApi'
 import { formatCurrency, centsToDollars, dollarsToCents } from '../../lib/format'
 
 const ROLES = ['customer', 'sales', 'mover', 'admin'] as const
@@ -25,6 +26,11 @@ export default function UserManagementPage() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: getUsers,
+  })
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: getCurrentUser,
   })
 
   const createMutation = useMutation({
@@ -74,6 +80,27 @@ export default function UserManagementPage() {
       alert(`Error: ${error.message}`)
     },
   })
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      alert('User deleted successfully')
+    },
+    onError: (error: Error) => {
+      alert(`Error: ${error.message}`)
+    },
+  })
+
+  const handleDeleteUser = (user: User) => {
+    if (currentUser && user.id === currentUser.id) {
+      alert('You cannot delete your own account')
+      return
+    }
+    if (confirm(`Are you sure you want to delete user "${user.email}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(user.id)
+    }
+  }
 
   const handleResetPassword = () => {
     if (!newPassword || newPassword.length < 6) {
@@ -445,6 +472,18 @@ export default function UserManagementPage() {
                         title="Reset Password"
                       >
                         Reset PW
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user)}
+                        disabled={currentUser?.id === user.id || deleteMutation.isPending}
+                        className={`text-xs ${
+                          currentUser?.id === user.id
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-red-600 hover:text-red-900'
+                        }`}
+                        title={currentUser?.id === user.id ? 'Cannot delete your own account' : 'Delete User'}
+                      >
+                        Delete
                       </button>
                     </div>
                   </td>

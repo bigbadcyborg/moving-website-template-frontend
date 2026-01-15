@@ -61,9 +61,26 @@ export async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
-  const headers: HeadersInit = {
+  
+  // Convert headers to a plain object for easier manipulation
+  const baseHeaders: Record<string, string> = {}
+  if (options.headers) {
+    if (options.headers instanceof Headers) {
+      options.headers.forEach((value, key) => {
+        baseHeaders[key] = value
+      })
+    } else if (Array.isArray(options.headers)) {
+      options.headers.forEach(([key, value]) => {
+        baseHeaders[key] = value
+      })
+    } else {
+      Object.assign(baseHeaders, options.headers)
+    }
+  }
+  
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...baseHeaders,
   }
 
   if (accessToken) {
@@ -75,8 +92,8 @@ export async function apiRequest<T>(
     headers,
   })
 
-  // Handle 401 with refresh
-  if (response.status === 401 && refreshToken && !options.headers?.['Authorization']) {
+  // Handle 401 with refresh (only if we have a refresh token - don't redirect for public endpoints)
+  if (response.status === 401 && refreshToken && !baseHeaders['Authorization']) {
     try {
       const newAccessToken = await refreshAccessToken()
       headers['Authorization'] = `Bearer ${newAccessToken}`
@@ -86,7 +103,11 @@ export async function apiRequest<T>(
       })
     } catch (e) {
       clearTokens()
-      window.location.href = '/#/login'
+      // Only redirect to login if this is not a public endpoint
+      // Public endpoints should handle 401 gracefully
+      if (!url.includes('/bookings/public')) {
+        window.location.href = '/#/login'
+      }
       throw e
     }
   }

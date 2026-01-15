@@ -177,7 +177,7 @@ export default function JobDetailPage() {
                 >
                   <div>
                     <p className="font-medium text-sm">
-                      {member.employeeNumber || `Employee #${member.id}`}
+                      {member.userFullName || member.employeeNumber || `Employee #${member.id}`}
                       {member.isManager && <span className="ml-2 text-xs text-gray-500">(Manager)</span>}
                     </p>
                     <p className="text-xs text-gray-500">

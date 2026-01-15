@@ -40,9 +40,9 @@ export default function DispatchBoardPage() {
                   <p className="text-sm">
                     <strong>Status:</strong> <span className="capitalize">{job.status}</span>
                   </p>
-                  {job.assignedCrew && job.assignedCrew.length > 1 && (
+                  {job.assignedCrew && job.assignedCrew.length > 0 && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Crew: {job.assignedCrew.map(c => c.employeeNumber || `#${c.id}`).join(', ')}
+                      Crew: {job.assignedCrew.map(c => c.userFullName || c.employeeNumber || `Employee #${c.id}`).join(', ')}
                     </p>
                   )}
                 </div>

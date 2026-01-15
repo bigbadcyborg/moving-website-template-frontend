@@ -21,9 +21,6 @@ export default function AdminLayout() {
               <Link to="/admin/config" className="text-gray-700 hover:text-gray-900">
                 Config
               </Link>
-              <Link to="/admin/availability" className="text-gray-700 hover:text-gray-900">
-                Availability
-              </Link>
               <Link to="/admin/employees" className="text-gray-700 hover:text-gray-900">
                 Employees
               </Link>

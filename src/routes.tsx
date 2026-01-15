@@ -24,7 +24,6 @@ export const routes = {
   admin: {
     users: '/admin/users',
     config: '/admin/config',
-    availability: '/admin/availability',
     employees: '/admin/employees',
     createBooking: '/admin/create-booking',
     audit: '/admin/audit',
