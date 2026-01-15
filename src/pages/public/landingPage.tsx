@@ -1,0 +1,28 @@
+import { Link } from 'react-router-dom'
+
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <h1 className="text-4xl font-bold text-center mb-8">Your Moving Company</h1>
+        <p className="text-xl text-center text-gray-600 mb-12">
+          Professional moving services you can trust
+        </p>
+        <div className="flex justify-center gap-4">
+          <Link
+            to="/login"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Book Now
+          </Link>
+          <Link
+            to="/login"
+            className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+          >
+            Login
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
