@@ -14,16 +14,19 @@ export default function MoverLayout() {
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            <div className="flex gap-4">
-              <Link to="/mover/dispatch" className="text-gray-700 hover:text-gray-900">
-                Dispatch Board
-              </Link>
-              <Link to="/mover/payroll" className="text-gray-700 hover:text-gray-900">
-                Payroll
-              </Link>
-              <Link to="/mover/communications" className="text-gray-700 hover:text-gray-900">
-                Communications
-              </Link>
+            <div className="flex items-center gap-6">
+              <span className="font-bold text-xl text-orange-800">Employee Portal</span>
+              <div className="flex gap-4">
+                <Link to="/mover/dispatch" className="text-gray-700 hover:text-gray-900">
+                  Dispatch Board
+                </Link>
+                <Link to="/mover/payroll" className="text-gray-700 hover:text-gray-900">
+                  Payroll
+                </Link>
+                <Link to="/mover/communications" className="text-gray-700 hover:text-gray-900">
+                  Communications
+                </Link>
+              </div>
             </div>
             <button onClick={handleLogout} className="text-gray-700 hover:text-gray-900">
               Logout

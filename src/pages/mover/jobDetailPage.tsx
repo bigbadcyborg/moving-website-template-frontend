@@ -93,7 +93,8 @@ export default function JobDetailPage() {
         'customerName', 'customerEmail', 'customerPhone', 
         'moveFromAddress', 'moveToAddress', 'moveType', 
         'requestedTrucks', 'bedroomsWithMattresses', 'boxCount', 
-        'packingService', 'disassemblyNeeds', 'notes'
+        'packingService', 'disassemblyNeeds', 'notes',
+        'fromStories', 'fromElevator', 'toStories', 'toElevator'
       ]
       
       bookingFields.forEach(f => {
@@ -163,6 +164,10 @@ export default function JobDetailPage() {
       packingService: job.booking?.packingService || 'none',
       disassemblyNeeds: job.booking?.disassemblyNeeds || 'none',
       notes: job.booking?.notes || '', // Booking notes
+      fromStories: job.booking?.fromStories || 1,
+      fromElevator: job.booking?.fromElevator || false,
+      toStories: job.booking?.toStories || 1,
+      toElevator: job.booking?.toElevator || false,
       additionalStopsDetailed: job.booking?.additionalStopsDetailed 
         ? JSON.parse(job.booking?.additionalStopsDetailed) 
         : [],
@@ -326,10 +331,16 @@ export default function JobDetailPage() {
                     onChange={(e) => setEditDetails({ ...editDetails, moveType: e.target.value })}
                     className="w-full px-2 py-1 border rounded text-sm"
                   >
+                    <option value="">Select Property Type</option>
                     <option value="apartment">Apartment</option>
-                    <option value="house">House</option>
                     <option value="storage">Storage</option>
+                    <option value="house">House</option>
                     <option value="office">Office</option>
+                    <option value="pod">Pod</option>
+                    <option value="rentalTruck">Rental Truck</option>
+                    <option value="condo">Condo</option>
+                    <option value="townhome">Town-home</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
                 <div className="col-span-2">
@@ -340,6 +351,29 @@ export default function JobDetailPage() {
                     onChange={(e) => setEditDetails({ ...editDetails, moveFromAddress: e.target.value })}
                     className="w-full px-2 py-1 border rounded text-sm"
                   />
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div>
+                      <label className="block text-[10px] text-gray-500 uppercase font-bold">Floor</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editDetails.fromStories}
+                        onChange={(e) => setEditDetails({ ...editDetails, fromStories: parseInt(e.target.value) })}
+                        className="w-full px-2 py-1 border rounded text-xs"
+                      />
+                    </div>
+                    <div className="flex items-end pb-1">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editDetails.fromElevator}
+                          onChange={(e) => setEditDetails({ ...editDetails, fromElevator: e.target.checked })}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="ml-1 text-[10px] text-gray-700">Elevator</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-gray-500">To Address</label>
@@ -349,6 +383,29 @@ export default function JobDetailPage() {
                     onChange={(e) => setEditDetails({ ...editDetails, moveToAddress: e.target.value })}
                     className="w-full px-2 py-1 border rounded text-sm"
                   />
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div>
+                      <label className="block text-[10px] text-gray-500 uppercase font-bold">Floor</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editDetails.toStories}
+                        onChange={(e) => setEditDetails({ ...editDetails, toStories: parseInt(e.target.value) })}
+                        className="w-full px-2 py-1 border rounded text-xs"
+                      />
+                    </div>
+                    <div className="flex items-end pb-1">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editDetails.toElevator}
+                          onChange={(e) => setEditDetails({ ...editDetails, toElevator: e.target.checked })}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="ml-1 text-[10px] text-gray-700">Elevator</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="col-span-2 mt-2">
@@ -404,57 +461,6 @@ export default function JobDetailPage() {
                     <option value="some">Some</option>
                     <option value="many">Many</option>
                   </select>
-                </div>
-
-                <div className="col-span-2 mt-4 border-t pt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-sm font-bold text-gray-700 uppercase">Additional Stops</h3>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newStops = [...editDetails.additionalStopsDetailed, { address: '', longCarry: 'normal' }]
-                        setEditDetails({ ...editDetails, additionalStopsDetailed: newStops })
-                      }}
-                      className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      + Add Stop
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {editDetails.additionalStopsDetailed.map((stop: any, index: number) => (
-                      <div key={index} className="p-3 bg-gray-50 rounded border border-gray-200 relative">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newStops = editDetails.additionalStopsDetailed.filter((_: any, i: number) => i !== index)
-                            setEditDetails({ ...editDetails, additionalStopsDetailed: newStops })
-                          }}
-                          className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                        >
-                          Remove
-                        </button>
-                        <div className="grid grid-cols-1 gap-2 pr-12">
-                          <div>
-                            <label className="block text-[10px] text-gray-500 uppercase font-bold">Stop #{index + 1} Address</label>
-                            <input
-                              type="text"
-                              value={stop.address}
-                              onChange={(e) => {
-                                const newStops = [...editDetails.additionalStopsDetailed]
-                                newStops[index].address = e.target.value
-                                setEditDetails({ ...editDetails, additionalStopsDetailed: newStops })
-                              }}
-                              className="w-full px-2 py-1 border rounded text-sm"
-                              placeholder="Enter address"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {editDetails.additionalStopsDetailed.length === 0 && (
-                      <p className="text-xs text-gray-500 italic">No additional stops added.</p>
-                    )}
-                  </div>
                 </div>
 
                 <div className="col-span-2 mt-4 border-t pt-4">
@@ -538,9 +544,20 @@ export default function JobDetailPage() {
                   <p className="text-sm"><strong>Name:</strong> {job.booking.customerName}</p>
                   <p className="text-sm"><strong>Email:</strong> {job.booking.customerEmail}</p>
                   <p className="text-sm"><strong>Phone:</strong> {job.booking.customerPhone}</p>
+                  <p className="text-sm"><strong>Booked By:</strong> {job.booking.salesUserName || '(self booked)'}</p>
                   <div className="mt-2">
                     <p className="text-sm"><strong>From:</strong> {job.booking.moveFromAddress}</p>
+                    {(job.booking.fromStories !== undefined || job.booking.fromElevator !== undefined) && (
+                      <p className="text-xs text-gray-500 ml-4">
+                        Floor: {job.booking.fromStories || 1} {job.booking.fromElevator ? '(Elevator)' : '(Stairs)'}
+                      </p>
+                    )}
                     <p className="text-sm"><strong>To:</strong> {job.booking.moveToAddress}</p>
+                    {(job.booking.toStories !== undefined || job.booking.toElevator !== undefined) && (
+                      <p className="text-xs text-gray-500 ml-4">
+                        Floor: {job.booking.toStories || 1} {job.booking.toElevator ? '(Elevator)' : '(Stairs)'}
+                      </p>
+                    )}
                   </div>
                   
                   <div className="mt-4 pt-4 border-t space-y-2">
@@ -550,6 +567,7 @@ export default function JobDetailPage() {
                       <p><strong>Trucks Requested:</strong> {job.booking.requestedTrucks}</p>
                       <p><strong>Bedrooms:</strong> {job.booking.bedroomsWithMattresses}</p>
                       <p><strong>Boxes:</strong> {job.booking.boxCount}</p>
+                      <p><strong>Est. Time:</strong> {job.booking.estimatedHoursMin?.toFixed(2) || 'N/A'} - {job.booking.estimatedHoursMax?.toFixed(2) || 'N/A'} hrs</p>
                       <p><strong>Packing:</strong> {job.booking.packingService}</p>
                       <p><strong>Disassembly:</strong> {job.booking.disassemblyNeeds}</p>
                     </div>
@@ -576,12 +594,34 @@ export default function JobDetailPage() {
                     {job.booking.notes && (
                       <div className="mt-2">
                         <p className="text-sm font-medium">Booking Notes:</p>
-                        <p className="text-sm text-gray-600 italic">"{job.booking.notes}"</p>
+                        <p className="text-sm text-gray-600 italic whitespace-pre-wrap">"{job.booking.notes}"</p>
                       </div>
                     )}
                   </div>
                 </div>
               )}
+
+              {/* Assigned Truck Section */}
+              <div className="border-b pb-4">
+                <h3 className="font-medium mb-2 text-gray-900">Assigned Truck</h3>
+                {job.truck ? (
+                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h8m-8 5h8m-4 5v-4m-6 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-green-800">{job.truck.name}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <p className="text-sm text-yellow-700">No truck assigned yet</p>
+                    <p className="text-xs text-yellow-600">An admin will assign a truck to this job</p>
+                  </div>
+                )}
+              </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1">

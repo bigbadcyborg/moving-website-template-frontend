@@ -78,6 +78,9 @@ export default function SalesBookingsPage() {
                     Status: <span className="capitalize">{booking.status}</span>
                   </p>
                   <p className="text-sm">Deposit: {formatCurrency(booking.depositAmountCents)}</p>
+                  {booking.estimatedHoursMin && (
+                    <p className="text-sm">Est. Hours: {booking.estimatedHoursMin.toFixed(2)} - {booking.estimatedHoursMax?.toFixed(2)}</p>
+                  )}
                   {booking.notes && (
                     <p className="text-sm text-gray-500 mt-1">Notes: {booking.notes}</p>
                   )}

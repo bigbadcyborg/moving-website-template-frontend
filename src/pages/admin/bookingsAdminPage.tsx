@@ -78,7 +78,12 @@ export default function BookingsAdminPage() {
                     </span>
                     {booking.salesUserId && (
                       <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
-                        Sales Booking
+                        Sales Booking: {booking.salesUserName || 'Unknown'}
+                      </span>
+                    )}
+                    {!booking.salesUserId && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">
+                        (self booked)
                       </span>
                     )}
                   </div>
@@ -103,6 +108,9 @@ export default function BookingsAdminPage() {
                     <p><span className="text-gray-500">Deposit:</span> {formatCurrency(booking.depositAmountCents)}</p>
                     {booking.requestedTrucks && (
                       <p><span className="text-gray-500">Trucks:</span> {booking.requestedTrucks}</p>
+                    )}
+                    {booking.estimatedHoursMin && (
+                      <p><span className="text-gray-500">Est. Hours:</span> {booking.estimatedHoursMin.toFixed(2)} - {booking.estimatedHoursMax?.toFixed(2)}</p>
                     )}
                     <p><span className="text-gray-500">Created:</span> {formatDateTime(booking.createdAtUtc)}</p>
                   </div>

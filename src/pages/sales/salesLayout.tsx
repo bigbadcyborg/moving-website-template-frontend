@@ -14,19 +14,22 @@ export default function SalesLayout() {
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            <div className="flex gap-4">
-              <Link to="/sales/bookings" className="text-gray-700 hover:text-gray-900">
-                Bookings
-              </Link>
-              <Link to="/sales/jobs" className="text-gray-700 hover:text-gray-900">
-                Jobs
-              </Link>
-              <Link to="/sales/create-booking" className="text-gray-700 hover:text-gray-900">
-                Create Booking
-              </Link>
-              <Link to="/sales/commission" className="text-gray-700 hover:text-gray-900">
-                Commission
-              </Link>
+            <div className="flex items-center gap-6">
+              <span className="font-bold text-xl text-green-800">Sales Portal</span>
+              <div className="flex gap-4">
+                <Link to="/sales/bookings" className="text-gray-700 hover:text-gray-900">
+                  Bookings
+                </Link>
+                <Link to="/sales/jobs" className="text-gray-700 hover:text-gray-900">
+                  Jobs
+                </Link>
+                <Link to="/sales/create-booking" className="text-gray-700 hover:text-gray-900">
+                  Create Booking
+                </Link>
+                <Link to="/sales/commission" className="text-gray-700 hover:text-gray-900">
+                  Commission
+                </Link>
+              </div>
             </div>
             <button onClick={handleLogout} className="text-gray-700 hover:text-gray-900">
               Logout

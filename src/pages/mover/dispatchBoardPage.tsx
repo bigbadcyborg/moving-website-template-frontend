@@ -40,6 +40,11 @@ export default function DispatchBoardPage() {
                   <p className="text-sm">
                     <strong>Status:</strong> <span className="capitalize">{job.status}</span>
                   </p>
+                  {job.booking?.estimatedHoursMin && (
+                    <p className="text-sm text-gray-600">
+                      <strong>Est. Time:</strong> {job.booking.estimatedHoursMin.toFixed(2)} - {job.booking.estimatedHoursMax?.toFixed(2)} hrs
+                    </p>
+                  )}
                   {job.assignedCrew && job.assignedCrew.length > 0 && (
                     <p className="text-xs text-gray-500 mt-1">
                       Crew: {job.assignedCrew.map(c => {

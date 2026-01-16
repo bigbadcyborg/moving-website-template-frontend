@@ -197,7 +197,14 @@ export default function SalesJobsPage() {
                       <tr key={job.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm">{job.id}</td>
                         <td className="px-4 py-3 text-sm">{job.bookingId}</td>
-                        <td className="px-4 py-3 text-sm">{formatDateTime(job.scheduledStartUtc)}</td>
+                        <td className="px-4 py-3 text-sm">
+                          {formatDateTime(job.scheduledStartUtc)}
+                          {job.booking?.estimatedHoursMin && (
+                            <div className="text-xs text-gray-500">
+                              {job.booking.estimatedHoursMin.toFixed(2)}-{job.booking.estimatedHoursMax?.toFixed(2)} hrs
+                            </div>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-sm">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
                             job.status === 'completed' ? 'bg-green-100 text-green-800' :

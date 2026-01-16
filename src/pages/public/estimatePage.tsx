@@ -23,6 +23,10 @@ export default function EstimatePage() {
     toStairsFlights: 0,
     fromHasElevator: false,
     toHasElevator: false,
+    fromStories: 1,
+    fromElevator: false,
+    toStories: 1,
+    toElevator: false,
     specialItems: [],
     disassemblyNeeds: 'none',
     packingService: 'none',
@@ -151,6 +155,29 @@ export default function EstimatePage() {
                       required
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1">Floor Level</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.fromStories}
+                        onChange={(e) => setFormData({ ...formData, fromStories: parseInt(e.target.value) || 1 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                      />
+                    </div>
+                    <div className="flex items-end pb-2">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.fromElevator}
+                          onChange={(e) => setFormData({ ...formData, fromElevator: e.target.checked })}
+                          className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Has Elevator</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Destination */}
@@ -165,6 +192,29 @@ export default function EstimatePage() {
                       placeholder="Street, City, State, ZIP"
                       required
                     />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1">Floor Level</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.toStories}
+                        onChange={(e) => setFormData({ ...formData, toStories: parseInt(e.target.value) || 1 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                      />
+                    </div>
+                    <div className="flex items-end pb-2">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.toElevator}
+                          onChange={(e) => setFormData({ ...formData, toElevator: e.target.checked })}
+                          className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Has Elevator</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -217,10 +267,16 @@ export default function EstimatePage() {
                       onChange={(e) => setFormData({ ...formData, moveType: e.target.value as any })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     >
+                      <option value="">Select Property Type</option>
                       <option value="apartment">Apartment</option>
+                      <option value="storage">Storage</option>
                       <option value="house">House</option>
-                      <option value="storage">Storage Unit</option>
                       <option value="office">Office</option>
+                      <option value="pod">Pod</option>
+                      <option value="rentalTruck">Rental Truck</option>
+                      <option value="condo">Condo</option>
+                      <option value="townhome">Town-home</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
                   <div className="grid grid-cols-3 gap-4">

@@ -21,7 +21,12 @@ export default function SalesCreateBookingPage() {
     moveToAddress: '',
     depositAmount: '100.00',
     requestedTrucks: '1',
-    estimatedHours: '4',
+    estimatedHoursMin: '3',
+    estimatedHoursMax: '5',
+    fromStories: '1',
+    fromElevator: false,
+    toStories: '1',
+    toElevator: false,
     notes: '',
   })
 
@@ -32,6 +37,7 @@ export default function SalesCreateBookingPage() {
       if (stored) {
         try {
           const data = JSON.parse(stored)
+          const option = data.quote?.options?.find((opt: any) => opt.moverCount === data.selectedMoverCount)
           setFormData((prev: any) => ({
             ...prev,
             customerName: data.customerName || prev.customerName,
@@ -40,7 +46,8 @@ export default function SalesCreateBookingPage() {
             moveFromAddress: data.originAddress || prev.moveFromAddress,
             moveToAddress: data.destinationAddress || prev.moveToAddress,
             requestedTrucks: data.requestedTrucks?.toString() || prev.requestedTrucks,
-            estimatedHours: (data.quote?.options?.find((opt: any) => opt.moverCount === data.selectedMoverCount)?.etaMinutesRange.high / 60).toFixed(1) || prev.estimatedHours,
+            estimatedHoursMin: (option?.etaMinutesRange.low / 60).toFixed(1) || prev.estimatedHoursMin,
+            estimatedHoursMax: (option?.etaMinutesRange.high / 60).toFixed(1) || prev.estimatedHoursMax,
             notes: data.notes || prev.notes,
             // Include extra fields for the API
             moveType: data.moveType,
@@ -55,6 +62,10 @@ export default function SalesCreateBookingPage() {
             toHasElevator: data.toHasElevator,
             originLongCarry: data.originLongCarry,
             destinationLongCarry: data.destinationLongCarry,
+            fromStories: data.fromStories?.toString() || prev.fromStories,
+            fromElevator: data.fromElevator !== undefined ? data.fromElevator : prev.fromElevator,
+            toStories: data.toStories?.toString() || prev.toStories,
+            toElevator: data.toElevator !== undefined ? data.toElevator : prev.toElevator,
             specialItems: data.specialItems,
             disassemblyNeeds: data.disassemblyNeeds,
             packingService: data.packingService,
@@ -118,14 +129,14 @@ export default function SalesCreateBookingPage() {
     })
   }, [selectedDate, availabilityByDay])
 
-  // Calculate endUtc based on startUtc + estimated hours
+  // Calculate endUtc based on startUtc + estimated hours (using max for safety)
   const calculatedEndUtc = useMemo(() => {
-    if (!selectedSlot || !formData.estimatedHours) return selectedSlot?.endUtc || null
+    if (!selectedSlot || !formData.estimatedHoursMax) return selectedSlot?.endUtc || null
     const start = new Date(selectedSlot.startUtc)
-    const hours = parseFloat(formData.estimatedHours) || 0
+    const hours = parseFloat(formData.estimatedHoursMax) || 0
     const end = new Date(start.getTime() + hours * 60 * 60 * 1000)
     return end.toISOString()
-  }, [selectedSlot, formData.estimatedHours])
+  }, [selectedSlot, formData.estimatedHoursMax])
 
   const [error, setError] = useState<string | null>(null)
 
@@ -133,11 +144,15 @@ export default function SalesCreateBookingPage() {
     mutationFn: () => {
       if (!selectedSlot) throw new Error('No slot selected')
       if (!calculatedEndUtc) throw new Error('Invalid estimated hours')
-      const { requestedTrucks: _req, estimatedHours: _hours, depositAmount: _dep, ...restFormData } = formData
+      const { requestedTrucks: _req, estimatedHoursMin: _min, estimatedHoursMax: _max, depositAmount: _dep, fromStories: _fs, toStories: _ts, ...restFormData } = formData
       return createBooking({ 
         startUtc: selectedSlot.startUtc,
         endUtc: calculatedEndUtc,
         requestedTrucks: parseInt(formData.requestedTrucks) || 1,
+        estimatedHoursMin: parseFloat(formData.estimatedHoursMin),
+        estimatedHoursMax: parseFloat(formData.estimatedHoursMax),
+        fromStories: parseInt(formData.fromStories) || 1,
+        toStories: parseInt(formData.toStories) || 1,
         ...restFormData, 
         depositAmountCents: dollarsToCents(parseFloat(formData.depositAmount))
       })
@@ -284,6 +299,29 @@ export default function SalesCreateBookingPage() {
                 className="w-full px-3 py-2 border rounded"
                 required
               />
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Floor Level</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.fromStories}
+                    onChange={(e) => setFormData({ ...formData, fromStories: e.target.value })}
+                    className="w-full px-3 py-1 border rounded text-sm"
+                  />
+                </div>
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.fromElevator}
+                      onChange={(e) => setFormData({ ...formData, fromElevator: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Has Elevator</span>
+                  </label>
+                </div>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Move To</label>
@@ -294,6 +332,29 @@ export default function SalesCreateBookingPage() {
                 className="w-full px-3 py-2 border rounded"
                 required
               />
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Floor Level</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.toStories}
+                    onChange={(e) => setFormData({ ...formData, toStories: e.target.value })}
+                    className="w-full px-3 py-1 border rounded text-sm"
+                  />
+                </div>
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.toElevator}
+                      onChange={(e) => setFormData({ ...formData, toElevator: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Has Elevator</span>
+                  </label>
+                </div>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Requested Trucks <span className="text-red-500">*</span></label>
@@ -309,20 +370,33 @@ export default function SalesCreateBookingPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Estimated Hours <span className="text-red-500">*</span>
+                Estimated Hours (Min - Max) <span className="text-red-500">*</span>
               </label>
-              <input
-                type="number"
-                step="0.5"
-                min="0.5"
-                max="10"
-                value={formData.estimatedHours}
-                onChange={(e) => setFormData({ ...formData, estimatedHours: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              />
+              <div className="flex gap-2 items-center">
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0.5"
+                  max="20"
+                  value={formData.estimatedHoursMin}
+                  onChange={(e) => setFormData({ ...formData, estimatedHoursMin: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                />
+                <span>-</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0.5"
+                  max="20"
+                  value={formData.estimatedHoursMax}
+                  onChange={(e) => setFormData({ ...formData, estimatedHoursMax: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                />
+              </div>
               <p className="text-xs text-gray-500 mt-1">
-                Expected duration of the move. Booking will end at: {selectedSlot && formData.estimatedHours && calculatedEndUtc ? formatDateTime(calculatedEndUtc as string) : 'Select a time slot first'}
+                Expected duration range. Booking will end at: {selectedSlot && formData.estimatedHoursMax && calculatedEndUtc ? formatDateTime(calculatedEndUtc as string) : 'Select a time slot first'}
               </p>
             </div>
             <div>

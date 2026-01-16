@@ -19,6 +19,7 @@ export interface Booking {
   startUtc?: string  // New bucket-based system
   endUtc?: string  // New bucket-based system
   requestedTrucks?: number  // New bucket-based system
+  salesUserName?: string
   createdAtUtc: string
   updatedAtUtc: string
   moveType?: string
@@ -31,9 +32,16 @@ export interface Booking {
   toStairsFlights?: number
   fromHasElevator?: boolean
   toHasElevator?: boolean
+  fromStories?: number
+  fromElevator?: boolean
+  toStories?: number
+  toElevator?: boolean
   originLongCarry?: string
   destinationLongCarry?: string
   specialItems?: string[]
+  estimatedHours?: number // Deprecated
+  estimatedHoursMin?: number
+  estimatedHoursMax?: number
   disassemblyNeeds?: string
   packingService?: string
 }
@@ -61,6 +69,10 @@ export interface BookingCreate {
   toStairsFlights?: number
   fromHasElevator?: boolean
   toHasElevator?: boolean
+  fromStories?: number
+  fromElevator?: boolean
+  toStories?: number
+  toElevator?: boolean
   originLongCarry?: string
   destinationLongCarry?: string
   specialItems?: string[]
@@ -87,7 +99,9 @@ export interface BookingCreate {
   urgent24Hours?: boolean
   additionalStops?: boolean
   needsPacking?: boolean
-  estimatedHours?: number
+  estimatedHours?: number // Deprecated
+  estimatedHoursMin?: number
+  estimatedHoursMax?: number
 }
 
 export interface BookingUpdate {
@@ -107,6 +121,10 @@ export interface BookingUpdate {
   toStairsFlights?: number
   fromHasElevator?: boolean
   toHasElevator?: boolean
+  fromStories?: number
+  fromElevator?: boolean
+  toStories?: number
+  toElevator?: boolean
   originLongCarry?: string
   destinationLongCarry?: string
   disassemblyNeeds?: string
@@ -178,7 +196,7 @@ export interface QuoteInput {
   destinationAddress: string
   destinationLongCarry: 'normal' | 'long' | 'veryLong'
   moveDateIso: string
-  moveType: 'apartment' | 'house' | 'storage' | 'office'
+  moveType: 'apartment' | 'house' | 'storage' | 'office' | 'pod' | 'rentalTruck' | 'condo' | 'townhome' | 'other'
   stopCount: number
   additionalStops: StopInput[]
   roomsMoving: number
@@ -188,6 +206,10 @@ export interface QuoteInput {
   toStairsFlights: number
   fromHasElevator: boolean
   toHasElevator: boolean
+  fromStories: number
+  fromElevator: boolean
+  toStories: number
+  toElevator: boolean
   specialItems: string[]
   disassemblyNeeds: 'none' | 'some' | 'many'
   packingService: 'none' | 'partial' | 'full'

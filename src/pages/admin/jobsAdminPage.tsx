@@ -354,6 +354,11 @@ export default function JobsAdminPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {formatDateTime(job.scheduledStartUtc)}
+                    {job.booking?.estimatedHoursMin && (
+                      <div className="text-xs text-gray-500">
+                        {job.booking.estimatedHoursMin.toFixed(2)}-{job.booking.estimatedHoursMax?.toFixed(2)} hrs
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`px-2 py-1 rounded text-xs ${getStatusColor(job.status)}`}>

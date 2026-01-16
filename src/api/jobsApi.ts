@@ -26,6 +26,14 @@ export interface BookingInfo {
   disassemblyNeeds?: string
   specialItems?: string[]
   additionalStopsDetailed?: string
+  salesUserId?: number
+  salesUserName?: string
+  estimatedHoursMin?: number
+  estimatedHoursMax?: number
+  fromStories?: number
+  fromElevator?: boolean
+  toStories?: number
+  toElevator?: boolean
 }
 
 export interface JobCreate {

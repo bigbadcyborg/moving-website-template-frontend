@@ -335,10 +335,16 @@ export default function CreateBookingPage() {
                 onChange={(e) => setFormData({ ...formData, moveType: e.target.value as any })}
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               >
+                <option value="">Select Property Type</option>
                 <option value="apartment">Apartment</option>
+                <option value="storage">Storage</option>
                 <option value="house">House</option>
-                <option value="storage">Storage Unit</option>
                 <option value="office">Office</option>
+                <option value="pod">Pod</option>
+                <option value="rentalTruck">Rental Truck</option>
+                <option value="condo">Condo</option>
+                <option value="townhome">Town-home</option>
+                <option value="other">Other</option>
               </select>
             </div>
             <div className="grid grid-cols-2 gap-4">

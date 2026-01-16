@@ -141,10 +141,14 @@ export default function CheckoutPage() {
         })
       }
       if (estimateData.specialItems?.length > 0) {
-        detailedNotes += '\nSpecial Items: ' + estimateData.specialItems.join(', ')
+        detailedNotes += '\n\nSpecial Items: ' + estimateData.specialItems.join(', ')
       }
       
-      detailedNotes += `\nCrew Size: ${selectedMoverCount} Movers`
+      detailedNotes += '\n\nCrew Size: ' + selectedMoverCount + ' Movers'
+
+      // Calculate min and max duration hours from estimate
+      const durationHoursMin = selectedOption?.etaMinutesRange.low / 60 || durationHours
+      const durationHoursMax = selectedOption?.etaMinutesRange.high / 60 || durationHours
 
       const bookingData: any = {
         ...restEstimateData,
@@ -158,6 +162,8 @@ export default function CheckoutPage() {
         moveFromAddress: estimateData.originAddress,
         moveToAddress: estimateData.destinationAddress,
         estimatedHours: durationHours,
+        estimatedHoursMin: durationHoursMin,
+        estimatedHoursMax: durationHoursMax,
         notes: detailedNotes.trim(),
         additionalStopsDetailed: JSON.stringify(estimateData.additionalStops || []),
       }
