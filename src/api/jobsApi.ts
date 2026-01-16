@@ -47,6 +47,8 @@ export interface Job {
   actualEndUtc?: string
   notes?: string
   issueDescription?: string
+  baseAmountCents?: number
+  tipAmountCents?: number
   assignedCrew?: EmployeeInfo[]
   booking?: BookingInfo
   truck?: TruckInfo | null
@@ -112,5 +114,12 @@ export async function updateJob(jobId: number, data: JobUpdate): Promise<Job> {
   return apiRequest(`/jobs/${jobId}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
+  })
+}
+
+export async function createFinalPaymentSession(jobId: number, tipAmountCents: number = 0): Promise<{ checkoutUrl: string }> {
+  return apiRequest(`/jobs/${jobId}/final-payment-session`, {
+    method: 'POST',
+    body: JSON.stringify({ tipAmountCents }),
   })
 }

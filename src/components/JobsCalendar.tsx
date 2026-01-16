@@ -67,6 +67,10 @@ export default function JobsCalendar({
         return 'bg-yellow-500'
       case 'started':
         return 'bg-green-500'
+      case 'finishedLoading':
+        return 'bg-indigo-500'
+      case 'startUnloading':
+        return 'bg-purple-500'
       case 'completed':
         return 'bg-gray-500'
       case 'issueReported':
@@ -203,7 +207,16 @@ export default function JobsCalendar({
                     <p className="text-xs text-gray-500">{formatDateTime(job.scheduledStartUtc)}</p>
                     {job.assignedCrew && job.assignedCrew.length > 0 && (
                       <p className="text-xs text-gray-500 mt-1">
-                        Crew: {job.assignedCrew.map(c => c.employeeNumber || `#${c.id}`).join(', ')}
+                        Crew: {job.assignedCrew.map(c => {
+                          const fullName = c.userFullName?.trim()
+                          if (fullName) {
+                            return fullName
+                          }
+                          if (c.employeeNumber?.trim()) {
+                            return c.employeeNumber.trim()
+                          }
+                          return 'Unknown'
+                        }).join(', ')}
                       </p>
                     )}
                   </div>

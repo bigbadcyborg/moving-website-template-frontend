@@ -258,8 +258,8 @@ export default function AvailabilityPage() {
                   </div>
                   {slot.remainingCapacity > 0 && (
                     <Link
-                      to={`/customer/create-booking?startUtc=${encodeURIComponent(slot.startUtc)}&endUtc=${encodeURIComponent(slot.endUtc)}&requestedTrucks=1`}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      to={`/checkout?startUtc=${encodeURIComponent(slot.startUtc)}&endUtc=${encodeURIComponent(slot.endUtc)}&requestedTrucks=1`}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold"
                     >
                       Book Now
                     </Link>

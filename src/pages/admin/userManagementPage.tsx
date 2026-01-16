@@ -80,7 +80,6 @@ export default function UserManagementPage() {
       alert(`Error: ${error.message}`)
     },
   })
-
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
@@ -91,16 +90,6 @@ export default function UserManagementPage() {
       alert(`Error: ${error.message}`)
     },
   })
-
-  const handleDeleteUser = (user: User) => {
-    if (currentUser && user.id === currentUser.id) {
-      alert('You cannot delete your own account')
-      return
-    }
-    if (confirm(`Are you sure you want to delete user "${user.email}"? This action cannot be undone.`)) {
-      deleteMutation.mutate(user.id)
-    }
-  }
 
   const handleResetPassword = () => {
     if (!newPassword || newPassword.length < 6) {
@@ -113,6 +102,16 @@ export default function UserManagementPage() {
     }
     if (!resetPasswordUserId) return
     resetPasswordMutation.mutate({ userId: resetPasswordUserId, password: newPassword })
+  }
+
+  const handleDeleteUser = (user: User) => {
+    if (currentUser && user.id === currentUser.id) {
+      alert('You cannot delete your own account')
+      return
+    }
+    if (confirm(`Are you sure you want to delete user "${user.email}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(user.id)
+    }
   }
 
   const handleCreateSubmit = (e: React.FormEvent) => {

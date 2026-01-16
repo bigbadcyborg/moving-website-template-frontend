@@ -25,7 +25,7 @@ export default function DispatchBoardPage() {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <Link to={`/mover/job/${job.id}`} className="font-medium text-blue-600 hover:underline text-lg">
-                    Job #{job.id}
+                    {job.booking?.customerName || `Job #${job.id}`}
                   </Link>
                   {job.booking && (
                     <div className="mt-2">
@@ -42,7 +42,19 @@ export default function DispatchBoardPage() {
                   </p>
                   {job.assignedCrew && job.assignedCrew.length > 0 && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Crew: {job.assignedCrew.map(c => c.userFullName || c.employeeNumber || `Employee #${c.id}`).join(', ')}
+                      Crew: {job.assignedCrew.map(c => {
+                        // Always prioritize userFullName if it exists (even if empty string, check for truthy)
+                        const fullName = c.userFullName?.trim()
+                        if (fullName) {
+                          return fullName
+                        }
+                        // Fallback to employeeNumber if no fullName
+                        if (c.employeeNumber?.trim()) {
+                          return c.employeeNumber.trim()
+                        }
+                        // Last resort
+                        return 'Unknown'
+                      }).join(', ')}
                     </p>
                   )}
                 </div>

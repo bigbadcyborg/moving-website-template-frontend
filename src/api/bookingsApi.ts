@@ -34,7 +34,25 @@ export interface BookingCreate {
   moveToAddress: string
   notes?: string
   depositAmountCents?: number  // Sales can override
-  // Move details - Starting location
+  
+  // New Estimation Logic Input Fields
+  moveType?: string
+  stopCount?: number
+  additionalStopsDetailed?: string // JSON string of StopInput[]
+  roomsMoving?: number
+  bedroomsWithMattresses?: number
+  boxCount?: number
+  fromStairsFlights?: number
+  toStairsFlights?: number
+  fromHasElevator?: boolean
+  toHasElevator?: boolean
+  originLongCarry?: string
+  destinationLongCarry?: string
+  specialItems?: string[]
+  disassemblyNeeds?: string
+  packingService?: string
+
+  // Move details - Starting location (Keep for compatibility)
   fromStreetAddress?: string
   fromZipCode?: string
   fromPropertyType?: string
@@ -42,7 +60,7 @@ export interface BookingCreate {
   fromStories?: number
   fromParkingDistance?: number
   fromElevator?: boolean
-  // Move details - Final location
+  // Move details - Final location (Keep for compatibility)
   toStreetAddress?: string
   toZipCode?: string
   toPropertyType?: string
@@ -54,7 +72,6 @@ export interface BookingCreate {
   urgent24Hours?: boolean
   additionalStops?: boolean
   needsPacking?: boolean
-  specialItems?: string[]
   estimatedHours?: number
 }
 
@@ -103,6 +120,47 @@ export async function deleteBooking(bookingId: number): Promise<{ message: strin
   })
 }
 
+export interface StopInput {
+  address: string
+  longCarry: 'normal' | 'long' | 'veryLong'
+}
+
+export interface QuoteInput {
+  originAddress: string
+  originLongCarry: 'normal' | 'long' | 'veryLong'
+  destinationAddress: string
+  destinationLongCarry: 'normal' | 'long' | 'veryLong'
+  moveDateIso: string
+  moveType: 'apartment' | 'house' | 'storage' | 'office'
+  stopCount: number
+  additionalStops: StopInput[]
+  roomsMoving: number
+  bedroomsWithMattresses: number
+  boxCount: number
+  fromStairsFlights: number
+  toStairsFlights: number
+  fromHasElevator: boolean
+  toHasElevator: boolean
+  specialItems: string[]
+  disassemblyNeeds: 'none' | 'some' | 'many'
+  packingService: 'none' | 'partial' | 'full'
+}
+
+export interface QuoteOption {
+  moverCount: number
+  etaMinutesRange: { low: number; high: number }
+  priceRange: { low: number; high: number }
+  transportFee: number
+}
+
+export interface QuoteResponse {
+  kind: 'instant' | 'manual'
+  reason?: string
+  options?: QuoteOption[]
+  distance?: { miles: number; driveMinutes: number }
+  points?: number
+}
+
 export interface MoveEstimationRequest {
   fromPropertyType: string
   fromSize: string
@@ -121,7 +179,15 @@ export interface MoveEstimationRequest {
   requestedTrucks: number
 }
 
-export async function estimateMoveTime(data: MoveEstimationRequest): Promise<{ estimatedHours: number }> {
+export async function estimateMoveQuote(data: QuoteInput): Promise<QuoteResponse> {
+  return apiRequest('/bookings/estimate', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+/** @deprecated Use estimateMoveQuote instead */
+export async function estimateMoveTime(data: any): Promise<{ estimatedHours: number }> {
   return apiRequest('/bookings/estimate', {
     method: 'POST',
     body: JSON.stringify(data),

@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getJob, updateJobStatus, assignCrew, Job } from '../../api/jobsApi'
 import { getEmployees, Employee } from '../../api/employeesApi'
+import { getCurrentUser } from '../../api/authApi'
 import { formatDateTime, formatCurrency } from '../../lib/format'
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const jobId = parseInt(id || '0')
   const [showAddCrew, setShowAddCrew] = useState(false)
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([])
@@ -22,6 +24,13 @@ export default function JobDetailPage() {
     queryKey: ['employees'],
     queryFn: getEmployees,
   })
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: getCurrentUser,
+  })
+
+  const isAdmin = currentUser?.role === 'admin'
 
   const statusMutation = useMutation({
     mutationFn: (newStatus: string) => updateJobStatus(jobId, newStatus),
@@ -72,6 +81,10 @@ export default function JobDetailPage() {
         return 'bg-yellow-100 text-yellow-800'
       case 'started':
         return 'bg-green-100 text-green-800'
+      case 'finishedLoading':
+        return 'bg-indigo-100 text-indigo-800'
+      case 'startUnloading':
+        return 'bg-purple-100 text-purple-800'
       case 'completed':
         return 'bg-gray-100 text-gray-800'
       case 'issueReported':
@@ -79,6 +92,17 @@ export default function JobDetailPage() {
       default:
         return 'bg-gray-100 text-gray-800'
     }
+  }
+ 
+  const getNextStatusAction = (currentStatus: string) => {
+    const map: Record<string, { nextStatus: string; label: string } | null> = {
+      scheduled: { nextStatus: 'enRoute', label: 'En Route' },
+      enRoute: { nextStatus: 'started', label: 'Start Job' },
+      started: { nextStatus: 'finishedLoading', label: 'Finished Loading' },
+      finishedLoading: { nextStatus: 'startUnloading', label: 'Start Unloading' },
+      startUnloading: { nextStatus: 'completed', label: 'Finish Job' },
+    }
+    return map[currentStatus] || null
   }
 
   return (
@@ -122,21 +146,75 @@ export default function JobDetailPage() {
                 <strong>Actual End:</strong> {formatDateTime(job.actualEndUtc)}
               </p>
             )}
+            {job.baseAmountCents !== undefined && job.baseAmountCents !== null && (
+              <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-100">
+                <p className="text-sm font-semibold text-blue-800 mb-1">Payment Details</p>
+                <div className="flex justify-between text-xs text-blue-700">
+                  <span>Move Total:</span>
+                  <span>{formatCurrency(job.baseAmountCents)}</span>
+                </div>
+                {job.tipAmountCents ? (
+                  <div className="flex justify-between text-xs text-blue-700">
+                    <span>Tip:</span>
+                    <span>{formatCurrency(job.tipAmountCents)}</span>
+                  </div>
+                ) : null}
+                <div className="flex justify-between text-sm font-bold text-blue-900 mt-1 border-t border-blue-200 pt-1">
+                  <span>Total Taken:</span>
+                  <span>{formatCurrency((job.baseAmountCents || 0) + (job.tipAmountCents || 0))}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-2">Update Status</label>
-            <select
-              value={job.status}
-              onChange={(e) => statusMutation.mutate(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
-            >
-              <option value="scheduled">Scheduled</option>
-              <option value="enRoute">En Route</option>
-              <option value="started">Started</option>
-              <option value="completed">Completed</option>
-              <option value="issueReported">Issue Reported</option>
-            </select>
+            {(() => {
+              const action = getNextStatusAction(job.status)
+              
+              return (
+                <div className="space-y-4">
+                  {action && (
+                    <button
+                      onClick={() => {
+                        if (action.nextStatus === 'completed') {
+                          navigate(`/mover/job/${jobId}/tip`)
+                        } else {
+                          statusMutation.mutate(action.nextStatus)
+                        }
+                      }}
+                      disabled={statusMutation.isPending}
+                      className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {statusMutation.isPending ? 'Updating...' : action.label}
+                    </button>
+                  )}
+                  
+                  {!action && <div className="text-sm text-gray-600 mb-2">Status: <span className={`px-2 py-1 rounded text-xs ${getStatusColor(job.status)}`}>{job.status}</span></div>}
+
+                  {isAdmin && (
+                    <div className="pt-4 border-t">
+                      <label className="block text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">Admin: Reset Status</label>
+                      <select
+                        value={job.status}
+                        onChange={(e) => statusMutation.mutate(e.target.value)}
+                        disabled={statusMutation.isPending}
+                        className="w-full px-3 py-2 border rounded text-sm bg-gray-50"
+                      >
+                        <option value="scheduled">Scheduled (Reset)</option>
+                        <option value="enRoute">En Route</option>
+                        <option value="started">Started</option>
+                        <option value="finishedLoading">Finished Loading</option>
+                        <option value="startUnloading">Start Unloading</option>
+                        <option value="completed">Completed</option>
+                        <option value="issueReported">Issue Reported</option>
+                      </select>
+                      <p className="text-[10px] text-gray-400 mt-1 italic">Note: Admins can bypass the normal status flow.</p>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </div>
 
           {job.notes && (
@@ -158,7 +236,7 @@ export default function JobDetailPage() {
         <div className="bg-white p-6 rounded-lg shadow space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Assigned Crew</h2>
-            {!showAddCrew && (
+            {isAdmin && !showAddCrew && (
               <button
                 onClick={() => setShowAddCrew(true)}
                 className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
@@ -173,24 +251,32 @@ export default function JobDetailPage() {
               {job.assignedCrew.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded border"
+                  className={`flex items-center ${isAdmin ? 'justify-between' : 'justify-start'} p-3 bg-gray-50 rounded border`}
                 >
                   <div>
                     <p className="font-medium text-sm">
-                      {member.userFullName || member.employeeNumber || `Employee #${member.id}`}
+                      {(() => {
+                        const fullName = member.userFullName?.trim()
+                        if (fullName) {
+                          return fullName
+                        }
+                        if (member.employeeNumber?.trim()) {
+                          return member.employeeNumber.trim()
+                        }
+                        return `Employee #${member.id}`
+                      })()}
                       {member.isManager && <span className="ml-2 text-xs text-gray-500">(Manager)</span>}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      Rate: {formatCurrency(member.hourlyRateCents)}/hr
-                    </p>
                   </div>
-                  <button
-                    onClick={() => handleRemoveCrew(member.id)}
-                    disabled={crewMutation.isPending}
-                    className="text-red-600 hover:text-red-800 text-sm"
-                  >
-                    Remove
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleRemoveCrew(member.id)}
+                      disabled={crewMutation.isPending}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -198,7 +284,7 @@ export default function JobDetailPage() {
             <p className="text-sm text-gray-500">No crew assigned yet.</p>
           )}
 
-          {showAddCrew && (
+          {isAdmin && showAddCrew && (
             <div className="border-t pt-4">
               <h3 className="text-sm font-medium mb-2">Add Crew Members</h3>
               <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-2">
@@ -223,8 +309,16 @@ export default function JobDetailPage() {
                         className="mr-2"
                       />
                       <span className="text-sm">
-                        {emp.userFullName || `Employee #${emp.id}`}
-                        {emp.employeeNumber && ` (${emp.employeeNumber})`}
+                        {(() => {
+                          const fullName = emp.userFullName?.trim()
+                          if (fullName) {
+                            return fullName
+                          }
+                          if (emp.employeeNumber?.trim()) {
+                            return emp.employeeNumber.trim()
+                          }
+                          return `Employee #${emp.id}`
+                        })()}
                         {emp.isManager && <span className="text-xs text-gray-500"> - Manager</span>}
                       </span>
                     </label>

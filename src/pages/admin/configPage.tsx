@@ -213,6 +213,17 @@ export default function ConfigPage() {
     totalTrucks: '',
     bucketMinutes: '',
     maxTrucksPerBooking: '',
+    // New Estimation Logic Config
+    minutesPerPoint: '',
+    fixedOverheadMinutes: '',
+    minBillMinutes: '',
+    billIncrementMinutes: '',
+    hourlyRatePerMover2: '',
+    hourlyRatePerMover3: '',
+    hourlyRatePerMover4: '',
+    freeServiceAreaMiles: '',
+    transportFeePerMile: '',
+    transportFeePerMinute: '',
   })
 
   // Initialize form when config loads
@@ -237,6 +248,17 @@ export default function ConfigPage() {
         totalTrucks: config.totalTrucks.toString(),
         bucketMinutes: config.bucketMinutes.toString(),
         maxTrucksPerBooking: config.maxTrucksPerBooking ? config.maxTrucksPerBooking.toString() : '',
+        // New Estimation Logic Config
+        minutesPerPoint: config.minutesPerPoint.toString(),
+        fixedOverheadMinutes: config.fixedOverheadMinutes.toString(),
+        minBillMinutes: config.minBillMinutes.toString(),
+        billIncrementMinutes: config.billIncrementMinutes.toString(),
+        hourlyRatePerMover2: toDollarsStr(config.hourlyRatePerMover2),
+        hourlyRatePerMover3: toDollarsStr(config.hourlyRatePerMover3),
+        hourlyRatePerMover4: toDollarsStr(config.hourlyRatePerMover4),
+        freeServiceAreaMiles: config.freeServiceAreaMiles.toString(),
+        transportFeePerMile: toDollarsStr(config.transportFeePerMileCents),
+        transportFeePerMinute: toDollarsStr(config.transportFeePerMinuteCents),
       })
     }
   }, [config])
@@ -262,6 +284,17 @@ export default function ConfigPage() {
       totalTrucks: parseInt(formData.totalTrucks),
       bucketMinutes: parseInt(formData.bucketMinutes),
       maxTrucksPerBooking: formData.maxTrucksPerBooking ? parseInt(formData.maxTrucksPerBooking) : null,
+      // New Estimation Logic Config
+      minutesPerPoint: parseFloat(formData.minutesPerPoint),
+      fixedOverheadMinutes: parseInt(formData.fixedOverheadMinutes),
+      minBillMinutes: parseInt(formData.minBillMinutes),
+      billIncrementMinutes: parseInt(formData.billIncrementMinutes),
+      hourlyRatePerMover2: dollarsToCents(parseFloat(formData.hourlyRatePerMover2)),
+      hourlyRatePerMover3: dollarsToCents(parseFloat(formData.hourlyRatePerMover3)),
+      hourlyRatePerMover4: dollarsToCents(parseFloat(formData.hourlyRatePerMover4)),
+      freeServiceAreaMiles: parseInt(formData.freeServiceAreaMiles),
+      transportFeePerMileCents: dollarsToCents(parseFloat(formData.transportFeePerMile)),
+      transportFeePerMinuteCents: dollarsToCents(parseFloat(formData.transportFeePerMinute)),
     }
     
     updateMutation.mutate(updateData)
@@ -582,6 +615,135 @@ export default function ConfigPage() {
                 <span className="text-sm font-medium">Enable Notifications</span>
               </label>
               <p className="text-xs text-gray-500 mt-1">Enable email and SMS notifications</p>
+            </div>
+          </div>
+
+          {/* Estimation Logic Settings */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Estimation & Quote Settings</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="md:col-span-3 pb-2 border-b">
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Mover Hourly Rates</h3>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Rate for 2 Movers (Total $/hr)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.hourlyRatePerMover2}
+                    onChange={(e) => setFormData({ ...formData, hourlyRatePerMover2: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Rate for 3 Movers (Total $/hr)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.hourlyRatePerMover3}
+                    onChange={(e) => setFormData({ ...formData, hourlyRatePerMover3: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Rate for 4 Movers (Total $/hr)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.hourlyRatePerMover4}
+                    onChange={(e) => setFormData({ ...formData, hourlyRatePerMover4: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+
+              <div className="md:col-span-3 pt-4 pb-2 border-b">
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Transport Fees</h3>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Free Service Area (Miles)</label>
+                <input
+                  type="number"
+                  value={formData.freeServiceAreaMiles}
+                  onChange={(e) => setFormData({ ...formData, freeServiceAreaMiles: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Fee Per Mile ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.transportFeePerMile}
+                    onChange={(e) => setFormData({ ...formData, transportFeePerMile: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Fee Per Minute ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.transportFeePerMinute}
+                    onChange={(e) => setFormData({ ...formData, transportFeePerMinute: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+
+              <div className="md:col-span-3 pt-4 pb-2 border-b">
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Calculation Factors</h3>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Minutes Per Inventory Point</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.minutesPerPoint}
+                  onChange={(e) => setFormData({ ...formData, minutesPerPoint: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Fixed Overhead (Minutes)</label>
+                <input
+                  type="number"
+                  value={formData.fixedOverheadMinutes}
+                  onChange={(e) => setFormData({ ...formData, fixedOverheadMinutes: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Minimum Bill (Minutes)</label>
+                <input
+                  type="number"
+                  value={formData.minBillMinutes}
+                  onChange={(e) => setFormData({ ...formData, minBillMinutes: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Bill Increment (Minutes)</label>
+                <input
+                  type="number"
+                  value={formData.billIncrementMinutes}
+                  onChange={(e) => setFormData({ ...formData, billIncrementMinutes: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
             </div>
           </div>
         </div>

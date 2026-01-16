@@ -1,552 +1,465 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { estimateMoveTime } from '../../api/bookingsApi'
+import { estimateMoveQuote, QuoteInput, QuoteResponse, StopInput } from '../../api/bookingsApi'
+import { formatCurrency } from '../../lib/format'
 
 export default function EstimatePage() {
   const navigate = useNavigate()
 
-  const [formData, setFormData] = useState({
-    // Starting location
-    fromStreetAddress: '',
-    fromZipCode: '',
-    fromPropertyType: '',
-    fromSize: '',
-    fromStories: '1',
-    fromParkingDistance: '0',
-    fromElevator: false,
-    
-    // Final location
-    toStreetAddress: '',
-    toZipCode: '',
-    toPropertyType: '',
-    toSize: '',
-    toStories: '1',
-    toParkingDistance: '0',
-    toElevator: false,
-    
-    // Other information
-    urgent24Hours: false,
-    additionalStops: false,
-    needsPacking: false,
-    specialItems: [] as string[],
-    
-    // Booking details
-    estimatedHours: '4',
-    requestedTrucks: '1',
+  const [formData, setFormData] = useState<QuoteInput>({
+    originAddress: '',
+    originLongCarry: 'normal',
+    destinationAddress: '',
+    destinationLongCarry: 'normal',
+    moveDateIso: new Date().toISOString().split('T')[0],
+    moveType: 'apartment',
+    stopCount: 1,
+    additionalStops: [],
+    roomsMoving: 1, // Default 1 room (living room)
+    bedroomsWithMattresses: 0,
+    boxCount: 0,
+    fromStairsFlights: 0,
+    toStairsFlights: 0,
+    fromHasElevator: false,
+    toHasElevator: false,
+    specialItems: [],
+    disassemblyNeeds: 'none',
+    packingService: 'none',
   })
   
-  const [estimatedHours, setEstimatedHours] = useState<number | null>(null)
+  const [quote, setQuote] = useState<QuoteResponse | null>(null)
   const [isCalculating, setIsCalculating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Calculate estimated hours when form data changes
-  useEffect(() => {
-    const calculateEstimation = async () => {
-      // Only calculate if we have minimum required fields
-      if (!formData.fromPropertyType || !formData.fromSize || !formData.toPropertyType || !formData.toSize) {
-        return
-      }
-      
-      setIsCalculating(true)
-      try {
-        const result = await estimateMoveTime({
-          fromPropertyType: formData.fromPropertyType,
-          fromSize: formData.fromSize,
-          fromStories: parseInt(formData.fromStories) || 1,
-          fromParkingDistance: parseInt(formData.fromParkingDistance) || 0,
-          fromElevator: formData.fromElevator,
-          toPropertyType: formData.toPropertyType,
-          toSize: formData.toSize,
-          toStories: parseInt(formData.toStories) || 1,
-          toParkingDistance: parseInt(formData.toParkingDistance) || 0,
-          toElevator: formData.toElevator,
-          urgent24Hours: formData.urgent24Hours,
-          additionalStops: formData.additionalStops,
-          needsPacking: formData.needsPacking,
-          specialItems: formData.specialItems,
-          requestedTrucks: parseInt(formData.requestedTrucks) || 1,
-        })
-        setEstimatedHours(result.estimatedHours)
-        setFormData(prev => ({ ...prev, estimatedHours: result.estimatedHours.toString() }))
-      } catch (error) {
-        console.error('Estimation error:', error)
-      } finally {
-        setIsCalculating(false)
-      }
+  
+  const calculateQuote = async () => {
+    if (!formData.originAddress || !formData.destinationAddress) {
+      alert('Please enter both origin and destination addresses.')
+      return
     }
     
-    // Debounce the calculation
-    const timeoutId = setTimeout(calculateEstimation, 500)
-    return () => clearTimeout(timeoutId)
-  }, [
-    formData.fromPropertyType,
-    formData.fromSize,
-    formData.fromStories,
-    formData.fromParkingDistance,
-    formData.fromElevator,
-    formData.toPropertyType,
-    formData.toSize,
-    formData.toStories,
-    formData.toParkingDistance,
-    formData.toElevator,
-    formData.urgent24Hours,
-    formData.additionalStops,
-    formData.needsPacking,
-    formData.specialItems,
-    formData.requestedTrucks,
-  ])
+    setIsCalculating(true)
+    try {
+      const result = await estimateMoveQuote(formData)
+      setQuote(result)
+    } catch (error) {
+      console.error('Estimation error:', error)
+      alert('Error calculating quote. Please check your addresses and try again.')
+    } finally {
+      setIsCalculating(false)
+    }
+  }
 
-  const handleSpecialItemToggle = (item: string) => {
+  const handleAddStop = () => {
     setFormData(prev => ({
       ...prev,
-      specialItems: prev.specialItems.includes(item)
-        ? prev.specialItems.filter(i => i !== item)
-        : [...prev.specialItems, item]
+      stopCount: prev.stopCount + 1,
+      additionalStops: [...prev.additionalStops, { address: '', longCarry: 'normal' }]
     }))
+  }
+
+  const handleRemoveStop = (index: number) => {
+    setFormData(prev => {
+      const newStops = [...prev.additionalStops]
+      newStops.splice(index, 1)
+      return {
+        ...prev,
+        stopCount: prev.stopCount - 1,
+        additionalStops: newStops
+      }
+    })
+  }
+
+  const handleStopChange = (index: number, field: keyof StopInput, value: string) => {
+    setFormData(prev => {
+      const newStops = [...prev.additionalStops]
+      newStops[index] = { ...newStops[index], [field]: value }
+      return { ...prev, additionalStops: newStops }
+    })
+  }
+
+  const specialItemsList = [
+    { id: 'piano', label: 'Piano' },
+    { id: 'poolTable', label: 'Pool Table' },
+    { id: 'safe', label: 'Safe (over 600 lbs)' },
+    { id: 'heavyFurniture', label: 'Heavy Furniture (over 600 lbs)' },
+    { id: 'artwork', label: 'Artwork (over $2000)' },
+  ]
+
+  const handleSpecialItemToggle = (itemId: string) => {
+    setFormData(prev => {
+      if (itemId === 'none') {
+        return { ...prev, specialItems: [] }
+      }
+      const newItems = prev.specialItems.includes(itemId)
+        ? prev.specialItems.filter(id => id !== itemId)
+        : [...prev.specialItems, itemId]
+      return { ...prev, specialItems: newItems }
+    })
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    
-    // Validate required fields
-    if (!formData.fromPropertyType || !formData.fromSize || !formData.toPropertyType || !formData.toSize) {
-      setError('Please fill in all required fields')
+    if (!quote || quote.kind === 'manual') {
+      alert('Please contact us for a manual quote for this move.')
       return
     }
     
-    if (!estimatedHours) {
-      setError('Please wait for the estimate to calculate')
-      return
-    }
-    
-    // Store estimate data in sessionStorage
     sessionStorage.setItem('estimateData', JSON.stringify({
       ...formData,
-      estimatedHours: estimatedHours,
+      quote: quote
     }))
     
-    // Navigate to checkout page (availability selection removed)
-    // Note: startUtc and endUtc will need to be selected on checkout page or passed via query params
-    navigate('/checkout')
+    navigate('/customer/availability')
   }
 
-  // Calculate estimated cost
-  const hourlyRate = 100
-  const estimatedCost = estimatedHours ? estimatedHours * hourlyRate : 0
-
-  const propertyTypes = ['apartment', 'condo', 'house', 'townhouse', 'mobile_home', 'commercial']
-  const propertySizes = [
-    'studio',
-    '1bedroom',
-    '2bedroom',
-    '3bedroom',
-    '4bedroom',
-    '5bedroom',
-    'small_house',
-    'medium_house',
-    'large_house',
-    'mansion',
-    'small_apartment',
-    'medium_apartment',
-    'large_apartment',
-  ]
-  const specialItemsList = [
-    'Piano',
-    'Pool Table',
-    'Safe (over 600 lbs)',
-    'Heavy Furniture (over 600 lbs)',
-    'Artwork (over $2000)',
-  ]
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6 text-center">Get Your Moving Quote</h1>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-5xl mx-auto px-4">
+        <h1 className="text-4xl font-extrabold mb-8 text-center text-gray-900">Get Your Move Estimate</h1>
         
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800 font-medium">Error</p>
-            <p className="text-red-600 text-sm mt-1">{error}</p>
-          </div>
-        )}
-        
-        {/* Estimated Time and Cost Display */}
-        {estimatedHours !== null && (
-          <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-blue-800 font-medium text-lg">
-                  Estimated Move Time: {estimatedHours} hours
-                  {isCalculating && <span className="ml-2 text-sm">(calculating...)</span>}
-                </p>
-                <p className="text-blue-600 text-sm mt-1">
-                  Estimated Cost: ${estimatedCost.toFixed(2)} (${hourlyRate}/hour)
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl space-y-8">
+              {/* Origin & Destination */}
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Address Information</h2>
+                
+                {/* Origin */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Origin Address</label>
+                    <input
+                      type="text"
+                      value={formData.originAddress}
+                      onChange={(e) => setFormData({ ...formData, originAddress: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="Street, City, State, ZIP"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1 text-blue-600">Walking Distance from Truck to Door (Origin)</label>
+                    <select
+                      value={formData.originLongCarry}
+                      onChange={(e) => setFormData({ ...formData, originLongCarry: e.target.value as any })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="normal">Normal (under 75ft)</option>
+                      <option value="long">Long (75-150ft)</option>
+                      <option value="veryLong">Very Long (150ft+)</option>
+                    </select>
+                  </div>
+                </div>
 
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-8">
-          {/* Starting Location */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Starting Location</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1">Street Address <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.fromStreetAddress}
-                  onChange={(e) => setFormData({ ...formData, fromStreetAddress: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="Enter Street Address"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">ZIP Code <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.fromZipCode}
-                  onChange={(e) => setFormData({ ...formData, fromZipCode: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="Enter Zip Code"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Property Type <span className="text-red-500">*</span></label>
-                <select
-                  value={formData.fromPropertyType}
-                  onChange={(e) => setFormData({ ...formData, fromPropertyType: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  required
-                >
-                  <option value="">Select Property Type</option>
-                  {propertyTypes.map(type => (
-                    <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Size <span className="text-red-500">*</span></label>
-                <select
-                  value={formData.fromSize}
-                  onChange={(e) => setFormData({ ...formData, fromSize: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  required
-                  disabled={!formData.fromPropertyType}
-                >
-                  <option value="">- Select a Property Type -</option>
-                  {formData.fromPropertyType && propertySizes.map(size => (
-                    <option key={size} value={size}>{size.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Stories <span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.fromStories}
-                  onChange={(e) => setFormData({ ...formData, fromStories: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="Enter number of stories"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Distance Truck Can Park From Door <span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.fromParkingDistance}
-                  onChange={(e) => setFormData({ ...formData, fromParkingDistance: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="Enter Walk Distance in Feet (approximate)"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Elevator Available <span className="text-red-500">*</span></label>
-                <div className="flex gap-4 mt-2">
-                  <label className="flex items-center">
+                {/* Destination */}
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Destination Address</label>
                     <input
-                      type="radio"
-                      name="fromElevator"
-                      checked={formData.fromElevator === true}
-                      onChange={() => setFormData({ ...formData, fromElevator: true })}
-                      className="mr-2"
+                      type="text"
+                      value={formData.destinationAddress}
+                      onChange={(e) => setFormData({ ...formData, destinationAddress: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="Street, City, State, ZIP"
                       required
                     />
-                    Yes
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="fromElevator"
-                      checked={formData.fromElevator === false}
-                      onChange={() => setFormData({ ...formData, fromElevator: false })}
-                      className="mr-2"
-                      required
-                    />
-                    No
-                  </label>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1 text-blue-600">Walking Distance from Truck to Door (Destination)</label>
+                    <select
+                      value={formData.destinationLongCarry}
+                      onChange={(e) => setFormData({ ...formData, destinationLongCarry: e.target.value as any })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="normal">Normal (under 75ft)</option>
+                      <option value="long">Long (75-150ft)</option>
+                      <option value="veryLong">Very Long (150ft+)</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Final Location */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Final Location</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1">Street Address <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.toStreetAddress}
-                  onChange={(e) => setFormData({ ...formData, toStreetAddress: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="Enter Street Address"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">ZIP Code <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={formData.toZipCode}
-                  onChange={(e) => setFormData({ ...formData, toZipCode: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="Enter Zip Code"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Property Type <span className="text-red-500">*</span></label>
-                <select
-                  value={formData.toPropertyType}
-                  onChange={(e) => setFormData({ ...formData, toPropertyType: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  required
-                >
-                  <option value="">Select Property Type</option>
-                  {propertyTypes.map(type => (
-                    <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}</option>
+                {/* Additional Stops */}
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-lg font-bold text-gray-800">Are you making any other stops?</label>
+                    <button 
+                      type="button" 
+                      onClick={handleAddStop}
+                      className="text-sm bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-bold hover:bg-orange-200"
+                    >
+                      + Add Stop
+                    </button>
+                  </div>
+                  
+                  {formData.additionalStops.map((stop, index) => (
+                    <div key={index} className="p-4 bg-orange-50 rounded-xl border border-orange-100 space-y-4 relative">
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveStop(index)}
+                        className="absolute top-2 right-2 text-orange-400 hover:text-orange-600"
+                      >
+                        ✕
+                      </button>
+                      <div>
+                        <label className="block text-xs font-bold text-orange-600 uppercase mb-1">Stop {index + 1} Address</label>
+                        <input
+                          type="text"
+                          value={stop.address}
+                          onChange={(e) => handleStopChange(index, 'address', e.target.value)}
+                          className="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                          placeholder="Street, City, State, ZIP"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-orange-600 uppercase mb-1">Walking Distance (Stop {index + 1})</label>
+                        <select
+                          value={stop.longCarry}
+                          onChange={(e) => handleStopChange(index, 'longCarry', e.target.value as any)}
+                          className="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                        >
+                          <option value="normal">Normal (under 75ft)</option>
+                          <option value="long">Long (75-150ft)</option>
+                          <option value="veryLong">Very Long (150ft+)</option>
+                        </select>
+                      </div>
+                    </div>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Size <span className="text-red-500">*</span></label>
-                <select
-                  value={formData.toSize}
-                  onChange={(e) => setFormData({ ...formData, toSize: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  required
-                  disabled={!formData.toPropertyType}
-                >
-                  <option value="">- Select a Property Type -</option>
-                  {formData.toPropertyType && propertySizes.map(size => (
-                    <option key={size} value={size}>{size.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Stories <span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.toStories}
-                  onChange={(e) => setFormData({ ...formData, toStories: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="Enter number of stories"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Distance Truck Can Park From Door <span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.toParkingDistance}
-                  onChange={(e) => setFormData({ ...formData, toParkingDistance: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="Enter Walk Distance in Feet (approximate)"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Elevator Available <span className="text-red-500">*</span></label>
-                <div className="flex gap-4 mt-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="toElevator"
-                      checked={formData.toElevator === true}
-                      onChange={() => setFormData({ ...formData, toElevator: true })}
-                      className="mr-2"
-                      required
-                    />
-                    Yes
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="toElevator"
-                      checked={formData.toElevator === false}
-                      onChange={() => setFormData({ ...formData, toElevator: false })}
-                      className="mr-2"
-                      required
-                    />
-                    No
-                  </label>
                 </div>
-              </div>
-            </div>
-          </div>
+              </section>
 
-          {/* Other Information */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Other Information</h2>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Is Your Move Happening 24 Hours or Less from Now? <span className="text-red-500">*</span></label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="urgent24Hours"
-                      checked={formData.urgent24Hours === true}
-                      onChange={() => setFormData({ ...formData, urgent24Hours: true })}
-                      className="mr-2"
-                      required
-                    />
-                    Yes
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="urgent24Hours"
-                      checked={formData.urgent24Hours === false}
-                      onChange={() => setFormData({ ...formData, urgent24Hours: false })}
-                      className="mr-2"
-                      required
-                    />
-                    No
-                  </label>
+              {/* Move Type & Inventory */}
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Inventory & Logistics</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Property Type</label>
+                    <select
+                      value={formData.moveType}
+                      onChange={(e) => setFormData({ ...formData, moveType: e.target.value as any })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="apartment">Apartment</option>
+                      <option value="house">House</option>
+                      <option value="storage">Storage Unit</option>
+                      <option value="office">Office</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Bedrooms</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.bedroomsWithMattresses}
+                        onChange={(e) => setFormData({ ...formData, bedroomsWithMattresses: parseInt(e.target.value) || 0 })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Boxes</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.boxCount}
+                        onChange={(e) => setFormData({ ...formData, boxCount: parseInt(e.target.value) || 0 })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Are you making any other stops? <span className="text-red-500">*</span></label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="additionalStops"
-                      checked={formData.additionalStops === true}
-                      onChange={() => setFormData({ ...formData, additionalStops: true })}
-                      className="mr-2"
-                      required
-                    />
-                    Yes
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="additionalStops"
-                      checked={formData.additionalStops === false}
-                      onChange={() => setFormData({ ...formData, additionalStops: false })}
-                      className="mr-2"
-                      required
-                    />
-                    No
-                  </label>
+              </section>
+
+              {/* Access */}
+              <section className="space-y-4">
+                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Access Details</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-4 bg-gray-50 rounded-xl space-y-4">
+                    <h3 className="font-bold text-gray-600 uppercase text-xs tracking-wider">Origin Access</h3>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-500 mb-1">Stairs (Flights)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={formData.fromStairsFlights}
+                          onChange={(e) => setFormData({ ...formData, fromStairsFlights: parseInt(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        />
+                      </div>
+                      <div className="flex items-center pt-5">
+                        <input
+                          type="checkbox"
+                          id="fromElevator"
+                          checked={formData.fromHasElevator}
+                          onChange={(e) => setFormData({ ...formData, fromHasElevator: e.target.checked })}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="fromElevator" className="ml-2 text-sm text-gray-700">Elevator?</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl space-y-4">
+                    <h3 className="font-bold text-gray-600 uppercase text-xs tracking-wider">Destination Access</h3>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-500 mb-1">Stairs (Flights)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={formData.toStairsFlights}
+                          onChange={(e) => setFormData({ ...formData, toStairsFlights: parseInt(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        />
+                      </div>
+                      <div className="flex items-center pt-5">
+                        <input
+                          type="checkbox"
+                          id="toElevator"
+                          checked={formData.toHasElevator}
+                          onChange={(e) => setFormData({ ...formData, toHasElevator: e.target.checked })}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="toElevator" className="ml-2 text-sm text-gray-700">Elevator?</label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Do You Need Help Packing? <span className="text-red-500">*</span></label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="needsPacking"
-                      checked={formData.needsPacking === true}
-                      onChange={() => setFormData({ ...formData, needsPacking: true })}
-                      className="mr-2"
-                      required
-                    />
-                    Yes
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="needsPacking"
-                      checked={formData.needsPacking === false}
-                      onChange={() => setFormData({ ...formData, needsPacking: false })}
-                      className="mr-2"
-                      required
-                    />
-                    No
-                  </label>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Are You Planning on Moving Any of the Following Items? Check All That Apply</label>
-                <div className="space-y-2 mt-2">
+              </section>
+
+              {/* Special Items */}
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Are You Planning on Moving Any of the Following Items?</h2>
+                <p className="text-sm text-gray-500 -mt-4 font-bold">Check All That Apply</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {specialItemsList.map(item => (
-                    <label key={item} className="flex items-center">
+                    <label key={item.id} className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-orange-50 cursor-pointer transition-colors">
                       <input
                         type="checkbox"
-                        checked={formData.specialItems.includes(item)}
-                        onChange={() => handleSpecialItemToggle(item)}
-                        className="mr-2"
+                        checked={formData.specialItems.includes(item.id)}
+                        onChange={() => handleSpecialItemToggle(item.id)}
+                        className="w-5 h-5 text-orange-500 rounded border-gray-300 focus:ring-orange-500"
                       />
-                      {item}
+                      <span className="ml-3 text-gray-700 font-medium">{item.label}</span>
                     </label>
                   ))}
-                  <label className="flex items-center">
+                  <label className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-orange-50 cursor-pointer transition-colors">
                     <input
                       type="checkbox"
                       checked={formData.specialItems.length === 0}
-                      onChange={() => setFormData({ ...formData, specialItems: [] })}
-                      className="mr-2"
+                      onChange={() => handleSpecialItemToggle('none')}
+                      className="w-5 h-5 text-orange-500 rounded border-gray-300 focus:ring-orange-500"
                     />
-                    None of the above
+                    <span className="ml-3 text-gray-700 font-medium">None of the above</span>
                   </label>
                 </div>
+              </section>
+
+              {/* More Services */}
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Special Services</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Disassembly & Assembly Needs</label>
+                    <select
+                      value={formData.disassemblyNeeds}
+                      onChange={(e) => setFormData({ ...formData, disassemblyNeeds: e.target.value as any })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="none">None</option>
+                      <option value="some">Some (1-3 items)</option>
+                      <option value="many">Many (4+ items)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Packing Service</label>
+                    <select
+                      value={formData.packingService}
+                      onChange={(e) => setFormData({ ...formData, packingService: e.target.value as any })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="none">No Packing</option>
+                      <option value="partial">Partial Packing</option>
+                      <option value="full">Full Packing</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              <div className="pt-6 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={calculateQuote}
+                  disabled={isCalculating}
+                  className="w-full py-4 bg-orange-500 text-white rounded-xl font-bold text-xl hover:bg-orange-600 transition-all shadow-lg hover:shadow-orange-200 disabled:opacity-50"
+                >
+                  {isCalculating ? 'Calculating...' : 'Get Instant Quote'}
+                </button>
               </div>
+            </form>
+          </div>
+
+          {/* Results Column */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8 space-y-6">
+              <div className="bg-white p-6 rounded-2xl shadow-xl border-2 border-orange-500">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center justify-between">
+                  Your Instant Quote
+                  {isCalculating && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>}
+                </h2>
+
+                {quote?.kind === 'instant' && quote.options ? (
+                  <div className="space-y-4">
+                    {quote.options.map((opt) => (
+                      <div key={opt.moverCount} className="p-4 bg-orange-50 rounded-xl border border-orange-100 hover:border-orange-300 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-bold text-lg text-orange-700">{opt.moverCount} Movers</span>
+                          <span className="text-sm font-semibold text-gray-500">{Math.round(opt.etaMinutesRange.low / 60)}-{Math.round(opt.etaMinutesRange.high / 60)} hrs</span>
+                        </div>
+                        <div className="text-2xl font-black text-gray-900">
+                          {formatCurrency(opt.priceRange.low * 100)} - {formatCurrency(opt.priceRange.high * 100)}
+                        </div>
+                        {opt.transportFee > 0 && (
+                          <div className="text-[10px] text-gray-400 mt-1">Includes {formatCurrency(opt.transportFee * 100)} transport fee</div>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={handleSubmit}
+                      className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200"
+                    >
+                      Book This Move
+                    </button>
+                  </div>
+                ) : quote?.kind === 'manual' ? (
+                  <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                    <p className="text-yellow-800 font-bold mb-2">Manual Quote Required</p>
+                    <p className="text-sm text-yellow-700">
+                      Based on your move details ({quote.reason === 'officeMove' ? 'office move' : quote.reason}), we need to review this manually to give you an accurate price.
+                    </p>
+                    <button className="w-full mt-4 py-2 bg-yellow-600 text-white rounded-lg font-bold">Request Review</button>
+                  </div>
+                ) : (
+                  <div className="py-12 text-center text-gray-400">
+                    <p>Fill out the form and click "Get Instant Quote" to see your pricing options.</p>
+                  </div>
+                )}
+              </div>
+
+              {quote?.distance && (
+                <div className="bg-white p-4 rounded-xl shadow-md text-sm text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Move Distance:</span>
+                    <span className="font-bold">{quote.distance.miles.toFixed(1)} miles</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Drive Time:</span>
+                    <span className="font-bold">{quote.distance.driveMinutes} mins</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Number of Trucks */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Number of Trucks <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="10"
-              value={formData.requestedTrucks}
-              onChange={(e) => setFormData({ ...formData, requestedTrucks: e.target.value })}
-              className="w-full px-3 py-2 border rounded"
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Number of trucks needed for this move
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={!estimatedHours || isCalculating}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-lg font-semibold"
-          >
-            {isCalculating ? 'Calculating...' : estimatedHours ? 'Select Availability' : 'Fill Form to Get Estimate'}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   )

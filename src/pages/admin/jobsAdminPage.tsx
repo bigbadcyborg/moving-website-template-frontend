@@ -51,6 +51,8 @@ export default function JobsAdminPage() {
       if (dateTo) params.dateToUtc = new Date(dateTo + 'T23:59:59').toISOString()
       return getJobs(params.dateFromUtc, params.dateToUtc)
     },
+    // Poll for live updates so admins see status changes in near real-time
+    refetchInterval: 5000,
   })
 
   // Fetch all jobs (without date filters) to properly check which bookings have jobs
@@ -166,6 +168,10 @@ export default function JobsAdminPage() {
         return 'bg-yellow-100 text-yellow-800'
       case 'started':
         return 'bg-green-100 text-green-800'
+      case 'finishedLoading':
+        return 'bg-indigo-100 text-indigo-800'
+      case 'startUnloading':
+        return 'bg-purple-100 text-purple-800'
       case 'completed':
         return 'bg-gray-100 text-gray-800'
       case 'issueReported':
@@ -257,6 +263,8 @@ export default function JobsAdminPage() {
               <option value="scheduled">Scheduled</option>
               <option value="enRoute">En Route</option>
               <option value="started">Started</option>
+              <option value="finishedLoading">Finished Loading</option>
+              <option value="startUnloading">Start Unloading</option>
               <option value="completed">Completed</option>
               <option value="issueReported">Issue Reported</option>
             </select>

@@ -3,6 +3,7 @@ import LandingPage from './pages/public/landingPage'
 import LoginPage from './pages/public/loginPage'
 import EstimatePage from './pages/public/estimatePage'
 import CheckoutPage from './pages/public/checkoutPage'
+import BookingSuccessPage from './pages/public/bookingSuccessPage'
 import QuotePage from './pages/public/quotePage'
 import CustomerLayout from './pages/customer/customerLayout'
 import AvailabilityPage from './pages/customer/availabilityPage'
@@ -18,6 +19,9 @@ import CommissionPage from './pages/sales/commissionPage'
 import MoverLayout from './pages/mover/moverLayout'
 import DispatchBoardPage from './pages/mover/dispatchBoardPage'
 import JobDetailPage from './pages/mover/jobDetailPage'
+import JobTipPage from './pages/mover/jobTipPage'
+import JobInvoicePage from './pages/mover/jobInvoicePage'
+import PaymentSuccessPage from './pages/mover/paymentSuccessPage'
 import CheckInOutPage from './pages/mover/checkInOutPage'
 import PayrollSummaryPage from './pages/mover/payrollSummaryPage'
 import CommunicationsPage from './pages/mover/communicationsPage'
@@ -37,6 +41,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/estimate" element={<EstimatePage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
+      <Route path="/booking-success" element={<BookingSuccessPage />} />
       <Route path="/quote" element={<QuotePage />} />
       <Route path="/create-booking" element={<CreateBookingPage />} />
       
@@ -61,6 +66,9 @@ export default function App() {
         <Route index element={<Navigate to="/mover/dispatch" replace />} />
         <Route path="dispatch" element={<DispatchBoardPage />} />
         <Route path="job/:id" element={<JobDetailPage />} />
+        <Route path="job/:id/tip" element={<JobTipPage />} />
+        <Route path="job/:id/invoice" element={<JobInvoicePage />} />
+        <Route path="job/:id/payment-success" element={<PaymentSuccessPage />} />
         <Route path="check-in-out" element={<CheckInOutPage />} />
         <Route path="payroll" element={<PayrollSummaryPage />} />
         <Route path="communications" element={<CommunicationsPage />} />

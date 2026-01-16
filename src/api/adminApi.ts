@@ -74,6 +74,16 @@ export interface CompanyConfig {
   totalTrucks: number
   bucketMinutes: number
   maxTrucksPerBooking: number | null
+  minutesPerPoint: number
+  fixedOverheadMinutes: number
+  minBillMinutes: number
+  billIncrementMinutes: number
+  hourlyRatePerMover2: number
+  hourlyRatePerMover3: number
+  hourlyRatePerMover4: number
+  freeServiceAreaMiles: number
+  transportFeePerMileCents: number
+  transportFeePerMinuteCents: number
 }
 
 export interface CompanyConfigUpdate {
@@ -93,6 +103,16 @@ export interface CompanyConfigUpdate {
   totalTrucks?: number
   bucketMinutes?: number
   maxTrucksPerBooking?: number | null
+  minutesPerPoint?: number
+  fixedOverheadMinutes?: number
+  minBillMinutes?: number
+  billIncrementMinutes?: number
+  hourlyRatePerMover2?: number
+  hourlyRatePerMover3?: number
+  hourlyRatePerMover4?: number
+  freeServiceAreaMiles?: number
+  transportFeePerMileCents?: number
+  transportFeePerMinuteCents?: number
 }
 
 export async function getConfig(): Promise<CompanyConfig> {

@@ -27,10 +27,10 @@ export default function EmployeesAdminPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Employee Number
+                  Employee
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User ID
+                  Employee Number
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Hourly Rate
@@ -44,10 +44,15 @@ export default function EmployeesAdminPage() {
               {employees?.map((employee) => (
                 <tr key={employee.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {employee.employeeNumber || '-'}
+                    <div className="font-medium">
+                      {employee.userFullName || 'Unknown'}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {employee.userEmail || ''}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {employee.userId}
+                    {employee.employeeNumber || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {formatCurrency(employee.hourlyRateCents)}
