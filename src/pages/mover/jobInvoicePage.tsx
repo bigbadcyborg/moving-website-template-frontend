@@ -5,11 +5,19 @@ import SignatureCanvas from 'react-signature-canvas'
 import { getJob, createFinalPaymentSession, updateJobStatus, getInvoicePreview } from '../../api/jobsApi'
 import { formatDateTime, formatCurrency } from '../../lib/format'
 
+// Helper to get the portal base path from current URL
+const getPortalBasePath = (pathname: string): string => {
+  if (pathname.startsWith('/admin')) return '/admin'
+  if (pathname.startsWith('/sales')) return '/sales'
+  return '/mover'
+}
+
 export default function JobInvoicePage() {
   const { id } = useParams<{ id: string }>()
   const jobId = parseInt(id || '0')
   const navigate = useNavigate()
   const location = useLocation()
+  const basePath = getPortalBasePath(location.pathname)
 
   // Extract tip from URL query params
   const tipAmountCents = useMemo(() => {
@@ -168,7 +176,7 @@ export default function JobInvoicePage() {
 
       <div className="flex gap-4">
         <button
-          onClick={() => navigate(`/mover/job/${jobId}/tip`)}
+          onClick={() => navigate(`${basePath}/job/${jobId}/tip`)}
           className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold"
         >
           Change Tip

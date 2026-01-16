@@ -1,13 +1,22 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getJob, getInvoicePreview } from '../../api/jobsApi'
 import { formatCurrency } from '../../lib/format'
+
+// Helper to get the portal base path from current URL
+const getPortalBasePath = (pathname: string): string => {
+  if (pathname.startsWith('/admin')) return '/admin'
+  if (pathname.startsWith('/sales')) return '/sales'
+  return '/mover'
+}
 
 export default function JobTipPage() {
   const { id } = useParams<{ id: string }>()
   const jobId = parseInt(id || '0')
   const navigate = useNavigate()
+  const location = useLocation()
+  const basePath = getPortalBasePath(location.pathname)
   
   const [customTip, setCustomTip] = useState<string>('')
   const [selectedPercentage, setSelectedPercentage] = useState<number | null>(null)
@@ -48,7 +57,7 @@ export default function JobTipPage() {
   const tipAmountCents = getTipAmountCents()
 
   const handleContinue = () => {
-    navigate(`/mover/job/${jobId}/invoice?tip=${tipAmountCents}`)
+    navigate(`${basePath}/job/${jobId}/invoice?tip=${tipAmountCents}`)
   }
 
   return (
@@ -106,7 +115,7 @@ export default function JobTipPage() {
           {tipAmountCents > 0 ? `Add ${formatCurrency(tipAmountCents)} Tip & Continue` : 'No Tip, Continue to Signature'}
         </button>
         <button
-          onClick={() => navigate(`/mover/job/${jobId}`)}
+          onClick={() => navigate(`${basePath}/job/${jobId}`)}
           className="w-full py-2 text-gray-500 hover:text-gray-700 text-sm font-medium"
         >
           Cancel

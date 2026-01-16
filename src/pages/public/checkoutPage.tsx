@@ -174,9 +174,6 @@ export default function CheckoutPage() {
       setError(null)
       if (data.bookingId) {
         setBookingId(data.bookingId)
-        if (data.expiresAtUtc) {
-          setExpiresAtUtc(data.expiresAtUtc)
-        }
         if (data.checkoutUrl) {
           setCheckoutUrl(data.checkoutUrl)
           // Redirect to Stripe Checkout automatically

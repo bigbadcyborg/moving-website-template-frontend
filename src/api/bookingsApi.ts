@@ -84,17 +84,13 @@ export interface BookingCreate {
   fromZipCode?: string
   fromPropertyType?: string
   fromSize?: string
-  fromStories?: number
   fromParkingDistance?: number
-  fromElevator?: boolean
   // Move details - Final location (Keep for compatibility)
   toStreetAddress?: string
   toZipCode?: string
   toPropertyType?: string
   toSize?: string
-  toStories?: number
   toParkingDistance?: number
-  toElevator?: boolean
   // Other information
   urgent24Hours?: boolean
   additionalStops?: boolean

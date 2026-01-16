@@ -2,17 +2,14 @@ import { apiRequest } from './apiClient'
 
 export interface SalesCommission {
   id: number
-  salesUserId: number
   bookingId: number
-  depositAmountCents: number
-  totalAmountCents?: number
-  commissionAmountCents: number
-  isFinal: boolean
-  createdAtUtc: string
+  jobId: number
   customerName: string
-  moveDate: string
+  moveDate: string | null
+  depositAmountCents: number
+  commissionAmountCents: number
   jobStatus: string
-  isPaid: boolean
+  createdAtUtc: string
 }
 
 export interface SalesStats {

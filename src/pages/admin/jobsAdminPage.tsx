@@ -243,6 +243,7 @@ export default function JobsAdminPage() {
             jobsByDay={jobsByDay}
             onDaySelect={(date) => setSelectedCalendarDate(date)}
             selectedDate={selectedCalendarDate}
+            baseJobPath="/admin/job"
           />
         </div>
       )}
@@ -336,7 +337,7 @@ export default function JobsAdminPage() {
                 <tr key={job.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Link
-                      to={`/mover/job/${job.id}`}
+                      to={`/admin/job/${job.id}`}
                       className="text-blue-600 hover:text-blue-900"
                     >
                       #{job.id}

@@ -5,15 +5,19 @@ import { formatDateTime } from '../lib/format'
 import { Link } from 'react-router-dom'
 
 interface JobsCalendarProps {
-  jobsByDay: Array<{ date: string; jobs: Job[] }>
+  jobsByDay?: Array<{ date: string; jobs: Job[] }>
   onDaySelect?: (date: Date) => void
   selectedDate?: Date | null
+  availableDates?: string[]
+  baseJobPath?: string
 }
 
 export default function JobsCalendar({
   jobsByDay,
   onDaySelect,
   selectedDate = null,
+  availableDates,
+  baseJobPath = '/mover/job',
 }: JobsCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   
@@ -33,9 +37,11 @@ export default function JobsCalendar({
   
   // Create a map of date strings to jobs
   const jobsByDateMap = new Map<string, Job[]>()
-  jobsByDay.forEach(({ date, jobs }) => {
-    jobsByDateMap.set(date, jobs)
-  })
+  if (jobsByDay) {
+    jobsByDay.forEach(({ date, jobs }) => {
+      jobsByDateMap.set(date, jobs)
+    })
+  }
   
   const getJobsForDate = (date: Date): Job[] => {
     const dateStr = format(date, 'yyyy-MM-dd')
@@ -195,7 +201,7 @@ export default function JobsCalendar({
             {getJobsForDate(selectedDate).map((job) => (
               <Link
                 key={job.id}
-                to={`/mover/job/${job.id}`}
+                to={`${baseJobPath}/${job.id}`}
                 className="block p-2 bg-gray-50 rounded hover:bg-gray-100 text-sm"
               >
                 <div className="flex justify-between items-start">

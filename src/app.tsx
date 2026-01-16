@@ -15,7 +15,6 @@ import SalesLayout from './pages/sales/salesLayout'
 import SalesCreateBookingPage from './pages/sales/salesCreateBookingPage'
 import SalesBookingsPage from './pages/sales/salesBookingsPage'
 import SalesJobsPage from './pages/sales/salesJobsPage'
-import CommissionPage from './pages/sales/commissionPage'
 import MoverLayout from './pages/mover/moverLayout'
 import DispatchBoardPage from './pages/mover/dispatchBoardPage'
 import JobDetailPage from './pages/mover/jobDetailPage'
@@ -23,8 +22,8 @@ import JobTipPage from './pages/mover/jobTipPage'
 import JobInvoicePage from './pages/mover/jobInvoicePage'
 import PaymentSuccessPage from './pages/mover/paymentSuccessPage'
 import CheckInOutPage from './pages/mover/checkInOutPage'
-import PayrollSummaryPage from './pages/mover/payrollSummaryPage'
 import CommunicationsPage from './pages/mover/communicationsPage'
+import DayOffRequestPage from './pages/mover/dayOffRequestPage'
 import AdminLayout from './pages/admin/adminLayout'
 import UserManagementPage from './pages/admin/userManagementPage'
 import ConfigPage from './pages/admin/configPage'
@@ -58,8 +57,11 @@ export default function App() {
         <Route index element={<Navigate to="/sales/bookings" replace />} />
         <Route path="bookings" element={<SalesBookingsPage />} />
         <Route path="jobs" element={<SalesJobsPage />} />
+        <Route path="job/:id" element={<JobDetailPage />} />
+        <Route path="job/:id/tip" element={<JobTipPage />} />
+        <Route path="job/:id/invoice" element={<JobInvoicePage />} />
+        <Route path="job/:id/payment-success" element={<PaymentSuccessPage />} />
         <Route path="create-booking" element={<SalesCreateBookingPage />} />
-        <Route path="commission" element={<CommissionPage />} />
       </Route>
       
       <Route path="/mover" element={<MoverLayout />}>
@@ -70,8 +72,8 @@ export default function App() {
         <Route path="job/:id/invoice" element={<JobInvoicePage />} />
         <Route path="job/:id/payment-success" element={<PaymentSuccessPage />} />
         <Route path="check-in-out" element={<CheckInOutPage />} />
-        <Route path="payroll" element={<PayrollSummaryPage />} />
         <Route path="communications" element={<CommunicationsPage />} />
+        <Route path="day-off" element={<DayOffRequestPage />} />
       </Route>
       
       <Route path="/admin" element={<AdminLayout />}>
@@ -81,6 +83,10 @@ export default function App() {
         <Route path="employees" element={<EmployeesAdminPage />} />
         <Route path="bookings" element={<BookingsAdminPage />} />
         <Route path="jobs" element={<JobsAdminPage />} />
+        <Route path="job/:id" element={<JobDetailPage />} />
+        <Route path="job/:id/tip" element={<JobTipPage />} />
+        <Route path="job/:id/invoice" element={<JobInvoicePage />} />
+        <Route path="job/:id/payment-success" element={<PaymentSuccessPage />} />
         <Route path="audit" element={<AuditLogPage />} />
         <Route path="create-booking" element={<AdminCreateBookingPage />} />
       </Route>

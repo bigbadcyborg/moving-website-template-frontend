@@ -20,11 +20,11 @@ export default function MoverLayout() {
                 <Link to="/mover/dispatch" className="text-gray-700 hover:text-gray-900">
                   Dispatch Board
                 </Link>
-                <Link to="/mover/payroll" className="text-gray-700 hover:text-gray-900">
-                  Payroll
-                </Link>
                 <Link to="/mover/communications" className="text-gray-700 hover:text-gray-900">
                   Communications
+                </Link>
+                <Link to="/mover/day-off" className="text-gray-700 hover:text-gray-900">
+                  Schedule / Day Off
                 </Link>
               </div>
             </div>

@@ -26,9 +26,6 @@ export default function SalesLayout() {
                 <Link to="/sales/create-booking" className="text-gray-700 hover:text-gray-900">
                   Create Booking
                 </Link>
-                <Link to="/sales/commission" className="text-gray-700 hover:text-gray-900">
-                  Commission
-                </Link>
               </div>
             </div>
             <button onClick={handleLogout} className="text-gray-700 hover:text-gray-900">

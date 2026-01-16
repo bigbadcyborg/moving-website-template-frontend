@@ -111,7 +111,7 @@ export default function SalesJobsPage() {
                           )}
                         </div>
                         <Link
-                          to={`/mover/job/${job.id}`}
+                          to={`/sales/job/${job.id}`}
                           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
                         >
                           View Details
@@ -180,6 +180,7 @@ export default function SalesJobsPage() {
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Scheduled Time</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -188,7 +189,7 @@ export default function SalesJobsPage() {
                 <tbody className="divide-y divide-gray-200">
                   {filteredJobs.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                         No jobs found
                       </td>
                     </tr>
@@ -197,6 +198,9 @@ export default function SalesJobsPage() {
                       <tr key={job.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm">{job.id}</td>
                         <td className="px-4 py-3 text-sm">{job.bookingId}</td>
+                        <td className="px-4 py-3 text-sm">
+                          {job.booking?.customerName || 'N/A'}
+                        </td>
                         <td className="px-4 py-3 text-sm">
                           {formatDateTime(job.scheduledStartUtc)}
                           {job.booking?.estimatedHoursMin && (
@@ -217,7 +221,7 @@ export default function SalesJobsPage() {
                         </td>
                         <td className="px-4 py-3 text-sm">
                           <Link
-                            to={`/mover/job/${job.id}`}
+                            to={`/sales/job/${job.id}`}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             View Details

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getJob, updateJobStatus, assignCrew, Job, updateJob } from '../../api/jobsApi'
 import { updateBooking } from '../../api/bookingsApi'
@@ -7,9 +7,18 @@ import { getEmployees, Employee } from '../../api/employeesApi'
 import { getCurrentUser } from '../../api/authApi'
 import { formatDateTime, formatCurrency } from '../../lib/format'
 
+// Helper to get the portal base path from current URL
+const getPortalBasePath = (pathname: string): string => {
+  if (pathname.startsWith('/admin')) return '/admin'
+  if (pathname.startsWith('/sales')) return '/sales'
+  return '/mover'
+}
+
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const basePath = getPortalBasePath(location.pathname)
   const jobId = parseInt(id || '0')
   const [showAddCrew, setShowAddCrew] = useState(false)
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([])
@@ -733,7 +742,7 @@ export default function JobDetailPage() {
                         <button
                           onClick={() => {
                             if (action.nextStatus === 'completed') {
-                              navigate(`/mover/job/${jobId}/tip`)
+                              navigate(`${basePath}/job/${jobId}/tip`)
                             } else {
                               statusMutation.mutate(action.nextStatus)
                             }

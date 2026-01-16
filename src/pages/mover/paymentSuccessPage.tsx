@@ -1,9 +1,26 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useLocation } from 'react-router-dom'
 import { updateJobStatus } from '../../api/jobsApi'
+
+// Helper to get the portal base path from current URL
+const getPortalBasePath = (pathname: string): string => {
+  if (pathname.startsWith('/admin')) return '/admin'
+  if (pathname.startsWith('/sales')) return '/sales'
+  return '/mover'
+}
+
+// Get the jobs list path for each portal
+const getJobsListPath = (basePath: string): string => {
+  if (basePath === '/admin') return '/admin/jobs'
+  if (basePath === '/sales') return '/sales/jobs'
+  return '/mover/dispatch'
+}
 
 export default function PaymentSuccessPage() {
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
+  const basePath = getPortalBasePath(location.pathname)
+  const jobsListPath = getJobsListPath(basePath)
   const jobId = parseInt(id || '0')
   const [status, setStatus] = useState<'updating' | 'success' | 'error'>('updating')
 
@@ -40,10 +57,10 @@ export default function PaymentSuccessPage() {
           <h1 className="text-2xl font-bold mb-2 text-green-700">Payment Successful!</h1>
           <p className="text-gray-600 mb-8">The job has been marked as completed.</p>
           <Link
-            to="/mover/dispatch"
+            to={jobsListPath}
             className="block w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
           >
-            Back to Dispatch Board
+            Back to Jobs
           </Link>
         </>
       )}
@@ -58,7 +75,7 @@ export default function PaymentSuccessPage() {
           <h1 className="text-2xl font-bold mb-2 text-red-700">Something went wrong</h1>
           <p className="text-gray-600 mb-8">Payment was successful, but we couldn't update the job status automatically.</p>
           <Link
-            to={`/mover/job/${jobId}`}
+            to={`${basePath}/job/${jobId}`}
             className="block w-full px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold"
           >
             Retry manually in Job Details

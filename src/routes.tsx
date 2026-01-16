@@ -12,14 +12,13 @@ export const routes = {
   sales: {
     createBooking: '/sales/create-booking',
     bookings: '/sales/bookings',
-    commission: '/sales/commission',
   },
   mover: {
     dispatch: '/mover/dispatch',
     jobDetail: '/mover/job/:id',
     checkInOut: '/mover/check-in-out',
-    payroll: '/mover/payroll',
     communications: '/mover/communications',
+    dayOff: '/mover/day-off',
   },
   admin: {
     users: '/admin/users',
