@@ -21,6 +21,21 @@ export interface Booking {
   requestedTrucks?: number  // New bucket-based system
   createdAtUtc: string
   updatedAtUtc: string
+  moveType?: string
+  stopCount?: number
+  additionalStopsDetailed?: string
+  roomsMoving?: number
+  bedroomsWithMattresses?: number
+  boxCount?: number
+  fromStairsFlights?: number
+  toStairsFlights?: number
+  fromHasElevator?: boolean
+  toHasElevator?: boolean
+  originLongCarry?: string
+  destinationLongCarry?: string
+  specialItems?: string[]
+  disassemblyNeeds?: string
+  packingService?: string
 }
 
 export interface BookingCreate {
@@ -73,6 +88,38 @@ export interface BookingCreate {
   additionalStops?: boolean
   needsPacking?: boolean
   estimatedHours?: number
+}
+
+export interface BookingUpdate {
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  moveFromAddress?: string
+  moveToAddress?: string
+  notes?: string
+  moveType?: string
+  stopCount?: number
+  additionalStopsDetailed?: string
+  roomsMoving?: number
+  bedroomsWithMattresses?: number
+  boxCount?: number
+  fromStairsFlights?: number
+  toStairsFlights?: number
+  fromHasElevator?: boolean
+  toHasElevator?: boolean
+  originLongCarry?: string
+  destinationLongCarry?: string
+  disassemblyNeeds?: string
+  packingService?: string
+  specialItems?: string[]
+  requestedTrucks?: number
+}
+
+export async function updateBooking(bookingId: number, data: BookingUpdate): Promise<Booking> {
+  return apiRequest(`/bookings/${bookingId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
 }
 
 export async function createBooking(data: BookingCreate): Promise<{ bookingId: number; checkoutUrl: string }> {

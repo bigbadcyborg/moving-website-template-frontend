@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { getAvailabilityByDay } from '../../api/availabilityApi'
 import { createBooking } from '../../api/bookingsApi'
 import { formatDateTime, dollarsToCents } from '../../lib/format'
@@ -7,9 +8,12 @@ import { addMonths, endOfMonth, format as formatDate } from 'date-fns'
 import AvailabilityCalendar from '../../components/AvailabilityCalendar'
 
 export default function AdminCreateBookingPage() {
+  const [searchParams] = useSearchParams()
+  const fromEstimate = searchParams.get('fromEstimate') === 'true'
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<{ startUtc: string; endUtc: string } | null>(null)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     customerName: '',
     customerEmail: '',
     customerPhone: '',
@@ -20,6 +24,53 @@ export default function AdminCreateBookingPage() {
     estimatedHours: '4',
     notes: '',
   })
+
+  // Pre-fill from estimate if available
+  useEffect(() => {
+    if (fromEstimate) {
+      const stored = sessionStorage.getItem('estimateData')
+      if (stored) {
+        try {
+          const data = JSON.parse(stored)
+          setFormData((prev: any) => ({
+            ...prev,
+            customerName: data.customerName || prev.customerName,
+            customerEmail: data.customerEmail || prev.customerEmail,
+            customerPhone: data.customerPhone || prev.customerPhone,
+            moveFromAddress: data.originAddress || prev.moveFromAddress,
+            moveToAddress: data.destinationAddress || prev.moveToAddress,
+            requestedTrucks: data.requestedTrucks?.toString() || prev.requestedTrucks,
+            estimatedHours: (data.quote?.options?.find((opt: any) => opt.moverCount === data.selectedMoverCount)?.etaMinutesRange.high / 60).toFixed(1) || prev.estimatedHours,
+            notes: data.notes || prev.notes,
+            // Include extra fields for the API
+            moveType: data.moveType,
+            stopCount: data.stopCount,
+            additionalStopsDetailed: JSON.stringify(data.additionalStops || []),
+            roomsMoving: data.roomsMoving,
+            bedroomsWithMattresses: data.bedroomsWithMattresses,
+            boxCount: data.boxCount,
+            fromStairsFlights: data.fromStairsFlights,
+            toStairsFlights: data.toStairsFlights,
+            fromHasElevator: data.fromHasElevator,
+            toHasElevator: data.toHasElevator,
+            originLongCarry: data.originLongCarry,
+            destinationLongCarry: data.destinationLongCarry,
+            specialItems: data.specialItems,
+            disassemblyNeeds: data.disassemblyNeeds,
+            packingService: data.packingService,
+          }))
+
+          if (data.startUtc) {
+            const date = new Date(data.startUtc)
+            setSelectedDate(date)
+            setSelectedSlot({ startUtc: data.startUtc, endUtc: data.startUtc }) // End will be recalculated
+          }
+        } catch (e) {
+          console.error('Error parsing estimate data:', e)
+        }
+      }
+    }
+  }, [fromEstimate])
 
   // Get date range for calendar - start from today, limit to 2 months to avoid timeout
   const { fromUtc, toUtc } = useMemo(() => {
@@ -82,7 +133,7 @@ export default function AdminCreateBookingPage() {
     mutationFn: () => {
       if (!selectedSlot) throw new Error('No slot selected')
       if (!calculatedEndUtc) throw new Error('Invalid estimated hours')
-      const { requestedTrucks: _req, estimatedHours: _hours, ...restFormData } = formData
+      const { requestedTrucks: _req, estimatedHours: _hours, depositAmount: _dep, ...restFormData } = formData
       return createBooking({ 
         startUtc: selectedSlot.startUtc,
         endUtc: calculatedEndUtc,
@@ -117,7 +168,15 @@ export default function AdminCreateBookingPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Create Booking (Admin)</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Create Booking (Admin)</h1>
+        <button
+          onClick={() => window.location.href = '#/estimate?returnTo=admin'}
+          className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold hover:bg-blue-200 transition-colors"
+        >
+          Use Quote Estimator
+        </button>
+      </div>
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-800 font-medium">Booking Error</p>

@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { estimateMoveQuote, QuoteInput, QuoteResponse, StopInput } from '../../api/bookingsApi'
 import { formatCurrency } from '../../lib/format'
 
 export default function EstimatePage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const returnTo = searchParams.get('returnTo')
 
   const [formData, setFormData] = useState<QuoteInput>({
     originAddress: '',
@@ -115,7 +117,13 @@ export default function EstimatePage() {
       selectedMoverCount: selectedMoverCount
     }))
     
-    navigate('/customer/availability')
+    if (returnTo === 'admin') {
+      navigate('/admin/create-booking?fromEstimate=true')
+    } else if (returnTo === 'sales') {
+      navigate('/sales/create-booking?fromEstimate=true')
+    } else {
+      navigate('/customer/availability')
+    }
   }
 
   return (

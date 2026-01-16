@@ -92,6 +92,12 @@ export interface CompanyConfig {
   freeServiceAreaMiles: number
   transportFeePerMileCents: number
   transportFeePerMinuteCents: number
+  priceSmallBoxCents: number
+  priceMediumBoxCents: number
+  priceLargeBoxCents: number
+  priceTvBoxCents: number
+  priceShrinkWrapCents: number
+  priceTapeCents: number
 }
 
 export interface CompanyConfigUpdate {
@@ -129,6 +135,12 @@ export interface CompanyConfigUpdate {
   freeServiceAreaMiles?: number
   transportFeePerMileCents?: number
   transportFeePerMinuteCents?: number
+  priceSmallBoxCents?: number
+  priceMediumBoxCents?: number
+  priceLargeBoxCents?: number
+  priceTvBoxCents?: number
+  priceShrinkWrapCents?: number
+  priceTapeCents?: number
 }
 
 export async function getConfig(): Promise<CompanyConfig> {

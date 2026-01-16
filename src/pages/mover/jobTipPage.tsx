@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { getJob } from '../../api/jobsApi'
+import { getJob, getInvoicePreview } from '../../api/jobsApi'
 import { formatCurrency } from '../../lib/format'
 
 export default function JobTipPage() {
@@ -12,21 +12,20 @@ export default function JobTipPage() {
   const [customTip, setCustomTip] = useState<string>('')
   const [selectedPercentage, setSelectedPercentage] = useState<number | null>(null)
 
-  const { data: job, isLoading } = useQuery({
+  const { data: job, isLoading: jobLoading } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => getJob(jobId),
   })
 
-  if (isLoading) return <div className="p-8 text-center text-gray-600">Loading details...</div>
-  if (!job) return <div className="p-8 text-center text-red-600">Job not found</div>
+  const { data: preview, isLoading: previewLoading } = useQuery({
+    queryKey: ['invoice-preview', jobId],
+    queryFn: () => getInvoicePreview(jobId),
+  })
 
-  // Base total calculation for tip suggestion
-  const startTime = job.actualStartUtc ? new Date(job.actualStartUtc) : new Date(job.scheduledStartUtc)
-  const endTime = new Date() // Current time for estimation
-  const durationMs = endTime.getTime() - startTime.getTime()
-  const hours = Math.max(1.0, durationMs / (1000 * 60 * 60))
-  const hourlyRate = 10000 // $100.00
-  const baseTotalCents = Math.round(hours * hourlyRate)
+  if (jobLoading || previewLoading) return <div className="p-8 text-center text-gray-600">Loading details...</div>
+  if (!job || !preview) return <div className="p-8 text-center text-red-600">Job not found</div>
+
+  const baseTotalCents = preview.baseAmountCents
 
   const handleSelectTip = (percentage: number) => {
     setSelectedPercentage(percentage)
@@ -60,7 +59,10 @@ export default function JobTipPage() {
       <div className="mb-6 p-4 bg-blue-50 rounded-lg text-center">
         <p className="text-sm text-blue-700 uppercase font-semibold tracking-wider">Move Base Total</p>
         <p className="text-2xl font-bold text-blue-900">{formatCurrency(baseTotalCents)}</p>
-        <p className="text-xs text-blue-600 mt-1">Based on {hours.toFixed(1)} hours of work</p>
+        <p className="text-[10px] text-blue-600 mt-1 italic">
+          (Labor: {formatCurrency(preview.laborAmountCents)} + Trip: {formatCurrency(preview.tripFeeCents)} + Specials: {formatCurrency(preview.specialItemsTotalCents)})
+        </p>
+        <p className="text-xs text-blue-600 mt-1">Based on {preview.billedHours.toFixed(1)} billed hours</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">

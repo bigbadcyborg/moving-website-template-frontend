@@ -2,7 +2,7 @@ import { useRef, useState, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import SignatureCanvas from 'react-signature-canvas'
-import { getJob, createFinalPaymentSession, updateJobStatus } from '../../api/jobsApi'
+import { getJob, createFinalPaymentSession, updateJobStatus, getInvoicePreview } from '../../api/jobsApi'
 import { formatDateTime, formatCurrency } from '../../lib/format'
 
 export default function JobInvoicePage() {
@@ -22,9 +22,14 @@ export default function JobInvoicePage() {
   
   const [error, setError] = useState<string | null>(null)
 
-  const { data: job, isLoading } = useQuery({
+  const { data: job, isLoading: jobLoading } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => getJob(jobId),
+  })
+
+  const { data: preview, isLoading: previewLoading } = useQuery({
+    queryKey: ['invoice-preview', jobId, tipAmountCents],
+    queryFn: () => getInvoicePreview(jobId, tipAmountCents),
   })
 
   const paymentMutation = useMutation({
@@ -40,17 +45,8 @@ export default function JobInvoicePage() {
     },
   })
 
-  if (isLoading) return <div className="p-8 text-center text-gray-600">Loading invoice details...</div>
-  if (!job) return <div className="p-8 text-center text-red-600">Job not found</div>
-
-  // Total calculation logic
-  const startTime = job.actualStartUtc ? new Date(job.actualStartUtc) : new Date(job.scheduledStartUtc)
-  const endTime = job.actualEndUtc ? new Date(job.actualEndUtc) : new Date()
-  const durationMs = endTime.getTime() - startTime.getTime()
-  const hours = Math.max(1.0, durationMs / (1000 * 60 * 60))
-  const hourlyRate = 10000 // $100.00
-  const baseTotalCents = Math.round(hours * hourlyRate)
-  const finalTotalCents = baseTotalCents + tipAmountCents
+  if (jobLoading || previewLoading) return <div className="p-8 text-center text-gray-600">Loading invoice details...</div>
+  if (!job || !preview) return <div className="p-8 text-center text-red-600">Job not found</div>
 
   const handleProceedToPayment = () => {
     setError(null)
@@ -85,18 +81,48 @@ export default function JobInvoicePage() {
           <h2 className="text-sm font-semibold uppercase text-gray-500 mb-2">Job Information</h2>
           <p className="text-lg font-medium">Job #{job.id}</p>
           {job.booking && <p className="text-gray-700">{job.booking.customerName}</p>}
-          <p className="text-sm text-gray-600 mt-1">Start: {formatDateTime(startTime.toISOString())}</p>
-          <p className="text-sm text-gray-600">End: {formatDateTime(endTime.toISOString())}</p>
+          <p className="text-sm text-gray-600 mt-1">Start: {formatDateTime(job.actualStartUtc || job.scheduledStartUtc)}</p>
+          <p className="text-sm text-gray-600">End: {formatDateTime(job.actualEndUtc || new Date().toISOString())}</p>
         </div>
-        <div className="text-right">
-          <h2 className="text-sm font-semibold uppercase text-gray-500 mb-2">Pricing</h2>
-          <p className="text-gray-700 text-sm">Move Duration: {hours.toFixed(2)} hours</p>
-          <p className="text-gray-700 text-sm">Hourly Rate: $100.00/hr</p>
-          <p className="text-gray-700 font-medium">Base Total: {formatCurrency(baseTotalCents)}</p>
+        <div className="text-right space-y-1">
+          <h2 className="text-sm font-semibold uppercase text-gray-500 mb-2">Pricing Breakdown</h2>
+          <p className="text-gray-600 text-xs italic">
+            {preview.billedHours.toFixed(2)} hrs @ {formatCurrency(preview.hourlyRateCents)}/hr ({preview.crewSize} movers)
+          </p>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Labor Total:</span>
+            <span className="font-medium">{formatCurrency(preview.laborAmountCents)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Trip Fee:</span>
+            <span className="font-medium">{formatCurrency(preview.tripFeeCents)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Special Items:</span>
+            <span className="font-medium">{formatCurrency(preview.specialItemsTotalCents)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Materials:</span>
+            <span className="font-medium">{formatCurrency(preview.materialsTotalCents)}</span>
+          </div>
+          <div className="flex justify-between font-bold border-t pt-1 mt-1">
+            <span>Subtotal:</span>
+            <span>{formatCurrency(preview.baseAmountCents)}</span>
+          </div>
           {tipAmountCents > 0 && (
-            <p className="text-green-600 font-medium">Tip: {formatCurrency(tipAmountCents)}</p>
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Tip:</span>
+              <span>{formatCurrency(tipAmountCents)}</span>
+            </div>
           )}
-          <p className="text-2xl font-bold text-blue-600 mt-2">Total: {formatCurrency(finalTotalCents)}</p>
+          <div className="flex justify-between text-sm text-red-600">
+            <span>Deposit Paid:</span>
+            <span>-{formatCurrency(preview.depositAmountCents)}</span>
+          </div>
+          <div className="flex justify-between text-2xl font-bold text-blue-600 pt-2 border-t-2 border-blue-100">
+            <span>Balance:</span>
+            <span>{formatCurrency(preview.totalBalanceCents)}</span>
+          </div>
         </div>
       </div>
 

@@ -231,6 +231,12 @@ export default function ConfigPage() {
     freeServiceAreaMiles: '',
     transportFeePerMile: '',
     transportFeePerMinute: '',
+    priceSmallBox: '',
+    priceMediumBox: '',
+    priceLargeBox: '',
+    priceTvBox: '',
+    priceShrinkWrap: '',
+    priceTape: '',
   })
 
   // Initialize form when config loads
@@ -273,6 +279,12 @@ export default function ConfigPage() {
         freeServiceAreaMiles: config.freeServiceAreaMiles.toString(),
         transportFeePerMile: toDollarsStr(config.transportFeePerMileCents),
         transportFeePerMinute: toDollarsStr(config.transportFeePerMinuteCents),
+        priceSmallBox: toDollarsStr(config.priceSmallBoxCents),
+        priceMediumBox: toDollarsStr(config.priceMediumBoxCents),
+        priceLargeBox: toDollarsStr(config.priceLargeBoxCents),
+        priceTvBox: toDollarsStr(config.priceTvBoxCents),
+        priceShrinkWrap: toDollarsStr(config.priceShrinkWrapCents),
+        priceTape: toDollarsStr(config.priceTapeCents),
       })
     }
   }, [config])
@@ -316,6 +328,12 @@ export default function ConfigPage() {
       freeServiceAreaMiles: parseInt(formData.freeServiceAreaMiles),
       transportFeePerMileCents: dollarsToCents(parseFloat(formData.transportFeePerMile)),
       transportFeePerMinuteCents: dollarsToCents(parseFloat(formData.transportFeePerMinute)),
+      priceSmallBoxCents: dollarsToCents(parseFloat(formData.priceSmallBox)),
+      priceMediumBoxCents: dollarsToCents(parseFloat(formData.priceMediumBox)),
+      priceLargeBoxCents: dollarsToCents(parseFloat(formData.priceLargeBox)),
+      priceTvBoxCents: dollarsToCents(parseFloat(formData.priceTvBox)),
+      priceShrinkWrapCents: dollarsToCents(parseFloat(formData.priceShrinkWrap)),
+      priceTapeCents: dollarsToCents(parseFloat(formData.priceTape)),
     }
     
     updateMutation.mutate(updateData)
@@ -902,6 +920,88 @@ export default function ConfigPage() {
                   onChange={(e) => setFormData({ ...formData, billIncrementMinutes: e.target.value })}
                   className="w-full px-3 py-2 border rounded"
                 />
+              </div>
+
+              <div className="md:col-span-3 pt-4 pb-2 border-b">
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Material Prices</h3>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Small Box ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.priceSmallBox}
+                    onChange={(e) => setFormData({ ...formData, priceSmallBox: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Medium Box ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.priceMediumBox}
+                    onChange={(e) => setFormData({ ...formData, priceMediumBox: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Large Box ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.priceLargeBox}
+                    onChange={(e) => setFormData({ ...formData, priceLargeBox: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">TV Box ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.priceTvBox}
+                    onChange={(e) => setFormData({ ...formData, priceTvBox: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Shrink Wrap ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.priceShrinkWrap}
+                    onChange={(e) => setFormData({ ...formData, priceShrinkWrap: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Tape ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.priceTape}
+                    onChange={(e) => setFormData({ ...formData, priceTape: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
               </div>
             </div>
           </div>

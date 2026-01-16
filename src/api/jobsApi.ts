@@ -17,6 +17,15 @@ export interface BookingInfo {
   moveFromAddress: string
   moveToAddress: string
   status: string
+  notes?: string
+  moveType?: string
+  requestedTrucks?: number
+  bedroomsWithMattresses?: number
+  boxCount?: number
+  packingService?: string
+  disassemblyNeeds?: string
+  specialItems?: string[]
+  additionalStopsDetailed?: string
 }
 
 export interface JobCreate {
@@ -37,6 +46,11 @@ export interface TruckInfo {
   isActive: boolean
 }
 
+export interface MaterialUsage {
+  type: string
+  quantity: number
+}
+
 export interface Job {
   id: number
   bookingId: number
@@ -49,6 +63,7 @@ export interface Job {
   issueDescription?: string
   baseAmountCents?: number
   tipAmountCents?: number
+  materialsUsed?: MaterialUsage[]
   assignedCrew?: EmployeeInfo[]
   booking?: BookingInfo
   truck?: TruckInfo | null
@@ -108,6 +123,9 @@ export interface JobUpdate {
   notes?: string
   issueDescription?: string
   truckId?: number | null
+  actualStartUtc?: string | null
+  actualEndUtc?: string | null
+  materialsUsed?: MaterialUsage[]
 }
 
 export async function updateJob(jobId: number, data: JobUpdate): Promise<Job> {
@@ -115,6 +133,28 @@ export async function updateJob(jobId: number, data: JobUpdate): Promise<Job> {
     method: 'PATCH',
     body: JSON.stringify(data),
   })
+}
+
+export interface InvoicePreview {
+  hours: number
+  minBillHours: number
+  billedHours: number
+  crewSize: number
+  moverRateCents: number
+  truckRateCents: number
+  hourlyRateCents: number
+  laborAmountCents: number
+  tripFeeCents: number
+  specialItemsTotalCents: number
+  materialsTotalCents: number
+  depositAmountCents: number
+  baseAmountCents: number
+  totalBalanceCents: number
+  tipAmountCents: number
+}
+
+export async function getInvoicePreview(jobId: number, tipAmountCents: number = 0): Promise<InvoicePreview> {
+  return apiRequest(`/jobs/${jobId}/invoice-preview?tipAmountCents=${tipAmountCents}`)
 }
 
 export async function createFinalPaymentSession(jobId: number, tipAmountCents: number = 0): Promise<{ checkoutUrl: string }> {

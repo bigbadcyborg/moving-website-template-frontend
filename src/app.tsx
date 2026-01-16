@@ -40,8 +40,8 @@ export default function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/estimate" element={<EstimatePage />} />
-      <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/booking-success" element={<BookingSuccessPage />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/quote" element={<QuotePage />} />
       <Route path="/create-booking" element={<CreateBookingPage />} />
       

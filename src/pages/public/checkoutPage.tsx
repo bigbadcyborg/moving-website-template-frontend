@@ -32,7 +32,35 @@ export default function CheckoutPage() {
   const [bookingCreated, setBookingCreated] = useState(false)
   const [bookingId, setBookingId] = useState<number | null>(null)
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null)
+  const [expiresAtUtc, setExpiresAtUtc] = useState<string | null>(null)
+  const [timeLeft, setTimeLeft] = useState<number | null>(null)
   const stripeButtonRef = useRef<HTMLDivElement>(null)
+
+  // Countdown timer logic
+  useEffect(() => {
+    if (!expiresAtUtc) return
+
+    const interval = setInterval(() => {
+      const now = new Date().getTime()
+      const expiry = new Date(expiresAtUtc).getTime()
+      const diff = Math.max(0, Math.floor((expiry - now) / 1000))
+      
+      setTimeLeft(diff)
+      
+      if (diff === 0) {
+        clearInterval(interval)
+        setError('Your session has expired. Please refresh the page to try again.')
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [expiresAtUtc])
+
+  const formatTimeLeft = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   // Redirect if missing required data
   useEffect(() => {
@@ -140,6 +168,9 @@ export default function CheckoutPage() {
       setError(null)
       if (data.bookingId) {
         setBookingId(data.bookingId)
+        if (data.expiresAtUtc) {
+          setExpiresAtUtc(data.expiresAtUtc)
+        }
         if (data.checkoutUrl) {
           setCheckoutUrl(data.checkoutUrl)
           // Redirect to Stripe Checkout automatically
@@ -170,9 +201,15 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-3xl mx-auto px-4">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-blue-600 p-8 text-white">
+          <div className="bg-blue-600 p-8 text-white relative">
             <h1 className="text-3xl font-bold">Secure Your Move</h1>
             <p className="opacity-90 mt-2 text-lg">Review your details and pay the deposit to confirm.</p>
+            {timeLeft !== null && timeLeft > 0 && (
+              <div className="absolute top-8 right-8 bg-blue-500/50 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                <p className="text-xs uppercase font-bold tracking-wider opacity-80">Hold expires in</p>
+                <p className="text-2xl font-mono font-bold leading-none">{formatTimeLeft(timeLeft)}</p>
+              </div>
+            )}
           </div>
 
           <div className="p-8">
