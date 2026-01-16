@@ -93,18 +93,31 @@ export default function AvailabilityPage() {
     requestMutation.mutate()
   }
 
+  // Get estimate data from sessionStorage to get requested trucks
+  const estimateData = useMemo(() => {
+    const stored = sessionStorage.getItem('estimateData')
+    if (!stored) return null
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return null
+    }
+  }, [])
+
+  const requestedTrucks = estimateData?.requestedTrucks || 1
+
   if (isLoading) {
     return (
       <div>
-        <div className="mb-4 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+        <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-green-900">Need a Different Time?</h2>
-              <p className="text-sm text-green-700">Request a custom availability slot</p>
+              <h2 className="text-lg font-bold text-blue-900">Need a Different Time?</h2>
+              <p className="text-sm text-blue-700">Request a custom availability slot</p>
             </div>
             <button
               onClick={() => setShowRequestForm(!showRequestForm)}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold shadow-lg text-lg"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg text-lg"
             >
               {showRequestForm ? '✕ Cancel' : '+ Request Custom Time'}
             </button>
@@ -120,15 +133,15 @@ export default function AvailabilityPage() {
   if (isError) {
     return (
       <div>
-        <div className="mb-4 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+        <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-green-900">Need a Different Time?</h2>
-              <p className="text-sm text-green-700">Request a custom availability slot</p>
+              <h2 className="text-lg font-bold text-blue-900">Need a Different Time?</h2>
+              <p className="text-sm text-blue-700">Request a custom availability slot</p>
             </div>
             <button
               onClick={() => setShowRequestForm(!showRequestForm)}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold shadow-lg text-lg"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg text-lg"
             >
               {showRequestForm ? '✕ Cancel' : '+ Request Custom Time'}
             </button>
@@ -212,15 +225,15 @@ export default function AvailabilityPage() {
   return (
     <div>
       {/* Always visible request button at the top */}
-      <div className="mb-4 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+      <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-green-900">Need a Different Time?</h2>
-            <p className="text-sm text-green-700">Request a custom availability slot</p>
+            <h2 className="text-lg font-bold text-blue-900">Need a Different Time?</h2>
+            <p className="text-sm text-blue-700">Request a custom availability slot</p>
           </div>
           <button
             onClick={() => setShowRequestForm(!showRequestForm)}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold shadow-lg text-lg"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg text-lg"
           >
             {showRequestForm ? '✕ Cancel' : '+ Request Custom Time'}
           </button>
@@ -258,7 +271,7 @@ export default function AvailabilityPage() {
                   </div>
                   {slot.remainingCapacity > 0 && (
                     <Link
-                      to={`/checkout?startUtc=${encodeURIComponent(slot.startUtc)}&endUtc=${encodeURIComponent(slot.endUtc)}&requestedTrucks=1`}
+                      to={`/checkout?startUtc=${encodeURIComponent(slot.startUtc)}&endUtc=${encodeURIComponent(slot.endUtc)}&requestedTrucks=${requestedTrucks}`}
                       className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold"
                     >
                       Book Now
@@ -337,7 +350,7 @@ export default function AvailabilityPage() {
             <button
               type="submit"
               disabled={requestMutation.isPending}
-              className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
             >
               {requestMutation.isPending ? 'Submitting...' : 'Submit Request'}
             </button>

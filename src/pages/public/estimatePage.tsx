@@ -15,7 +15,6 @@ export default function EstimatePage() {
     moveType: 'apartment',
     stopCount: 1,
     additionalStops: [],
-    roomsMoving: 1, // Default 1 room (living room)
     bedroomsWithMattresses: 0,
     boxCount: 0,
     fromStairsFlights: 0,
@@ -25,10 +24,13 @@ export default function EstimatePage() {
     specialItems: [],
     disassemblyNeeds: 'none',
     packingService: 'none',
+    requestedTrucks: 1,
+    roomsMoving: 1, // Keep for schema but not used in UI
   })
   
   const [quote, setQuote] = useState<QuoteResponse | null>(null)
   const [isCalculating, setIsCalculating] = useState(false)
+  const [selectedMoverCount, setSelectedMoverCount] = useState<number>(2)
   
   const calculateQuote = async () => {
     if (!formData.originAddress || !formData.destinationAddress) {
@@ -40,6 +42,10 @@ export default function EstimatePage() {
     try {
       const result = await estimateMoveQuote(formData)
       setQuote(result)
+      // Default to 2 movers if available
+      if (result.kind === 'instant' && result.options) {
+        setSelectedMoverCount(2)
+      }
     } catch (error) {
       console.error('Estimation error:', error)
       alert('Error calculating quote. Please check your addresses and try again.')
@@ -105,7 +111,8 @@ export default function EstimatePage() {
     
     sessionStorage.setItem('estimateData', JSON.stringify({
       ...formData,
-      quote: quote
+      quote: quote,
+      selectedMoverCount: selectedMoverCount
     }))
     
     navigate('/customer/availability')
@@ -121,7 +128,7 @@ export default function EstimatePage() {
             <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl space-y-8">
               {/* Origin & Destination */}
               <section className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Address Information</h2>
+                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-blue-600">Address Information</h2>
                 
                 {/* Origin */}
                 <div className="space-y-4">
@@ -135,18 +142,6 @@ export default function EstimatePage() {
                       placeholder="Street, City, State, ZIP"
                       required
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1 text-blue-600">Walking Distance from Truck to Door (Origin)</label>
-                    <select
-                      value={formData.originLongCarry}
-                      onChange={(e) => setFormData({ ...formData, originLongCarry: e.target.value as any })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                      <option value="normal">Normal (under 75ft)</option>
-                      <option value="long">Long (75-150ft)</option>
-                      <option value="veryLong">Very Long (150ft+)</option>
-                    </select>
                   </div>
                 </div>
 
@@ -163,18 +158,6 @@ export default function EstimatePage() {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1 text-blue-600">Walking Distance from Truck to Door (Destination)</label>
-                    <select
-                      value={formData.destinationLongCarry}
-                      onChange={(e) => setFormData({ ...formData, destinationLongCarry: e.target.value as any })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                      <option value="normal">Normal (under 75ft)</option>
-                      <option value="long">Long (75-150ft)</option>
-                      <option value="veryLong">Very Long (150ft+)</option>
-                    </select>
-                  </div>
                 </div>
 
                 {/* Additional Stops */}
@@ -184,43 +167,31 @@ export default function EstimatePage() {
                     <button 
                       type="button" 
                       onClick={handleAddStop}
-                      className="text-sm bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-bold hover:bg-orange-200"
+                      className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold hover:bg-blue-200"
                     >
                       + Add Stop
                     </button>
                   </div>
                   
                   {formData.additionalStops.map((stop, index) => (
-                    <div key={index} className="p-4 bg-orange-50 rounded-xl border border-orange-100 space-y-4 relative">
+                    <div key={index} className="p-4 bg-blue-50 rounded-xl border border-blue-100 space-y-4 relative">
                       <button 
                         type="button" 
                         onClick={() => handleRemoveStop(index)}
-                        className="absolute top-2 right-2 text-orange-400 hover:text-orange-600"
+                        className="absolute top-2 right-2 text-blue-400 hover:text-blue-600"
                       >
                         ✕
                       </button>
                       <div>
-                        <label className="block text-xs font-bold text-orange-600 uppercase mb-1">Stop {index + 1} Address</label>
+                        <label className="block text-xs font-bold text-blue-600 uppercase mb-1">Stop {index + 1} Address</label>
                         <input
                           type="text"
                           value={stop.address}
                           onChange={(e) => handleStopChange(index, 'address', e.target.value)}
-                          className="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                          className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                           placeholder="Street, City, State, ZIP"
                           required
                         />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-orange-600 uppercase mb-1">Walking Distance (Stop {index + 1})</label>
-                        <select
-                          value={stop.longCarry}
-                          onChange={(e) => handleStopChange(index, 'longCarry', e.target.value as any)}
-                          className="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
-                        >
-                          <option value="normal">Normal (under 75ft)</option>
-                          <option value="long">Long (75-150ft)</option>
-                          <option value="veryLong">Very Long (150ft+)</option>
-                        </select>
                       </div>
                     </div>
                   ))}
@@ -229,7 +200,7 @@ export default function EstimatePage() {
 
               {/* Move Type & Inventory */}
               <section className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Inventory & Logistics</h2>
+                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-blue-600">Inventory & Logistics</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Property Type</label>
@@ -244,7 +215,7 @@ export default function EstimatePage() {
                       <option value="office">Office</option>
                     </select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">Bedrooms</label>
                       <input
@@ -265,62 +236,16 @@ export default function EstimatePage() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                       />
                     </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Access */}
-              <section className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Access Details</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-4 bg-gray-50 rounded-xl space-y-4">
-                    <h3 className="font-bold text-gray-600 uppercase text-xs tracking-wider">Origin Access</h3>
-                    <div className="flex gap-4">
-                      <div className="flex-1">
-                        <label className="block text-xs text-gray-500 mb-1">Stairs (Flights)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={formData.fromStairsFlights}
-                          onChange={(e) => setFormData({ ...formData, fromStairsFlights: parseInt(e.target.value) || 0 })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        />
-                      </div>
-                      <div className="flex items-center pt-5">
-                        <input
-                          type="checkbox"
-                          id="fromElevator"
-                          checked={formData.fromHasElevator}
-                          onChange={(e) => setFormData({ ...formData, fromHasElevator: e.target.checked })}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                        <label htmlFor="fromElevator" className="ml-2 text-sm text-gray-700">Elevator?</label>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-xl space-y-4">
-                    <h3 className="font-bold text-gray-600 uppercase text-xs tracking-wider">Destination Access</h3>
-                    <div className="flex gap-4">
-                      <div className="flex-1">
-                        <label className="block text-xs text-gray-500 mb-1">Stairs (Flights)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={formData.toStairsFlights}
-                          onChange={(e) => setFormData({ ...formData, toStairsFlights: parseInt(e.target.value) || 0 })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        />
-                      </div>
-                      <div className="flex items-center pt-5">
-                        <input
-                          type="checkbox"
-                          id="toElevator"
-                          checked={formData.toHasElevator}
-                          onChange={(e) => setFormData({ ...formData, toHasElevator: e.target.checked })}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                        <label htmlFor="toElevator" className="ml-2 text-sm text-gray-700">Elevator?</label>
-                      </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Trucks</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={formData.requestedTrucks}
+                        onChange={(e) => setFormData({ ...formData, requestedTrucks: parseInt(e.target.value) || 1 })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
                     </div>
                   </div>
                 </div>
@@ -328,26 +253,26 @@ export default function EstimatePage() {
 
               {/* Special Items */}
               <section className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Are You Planning on Moving Any of the Following Items?</h2>
+                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-blue-600">Are You Planning on Moving Any of the Following Items?</h2>
                 <p className="text-sm text-gray-500 -mt-4 font-bold">Check All That Apply</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {specialItemsList.map(item => (
-                    <label key={item.id} className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-orange-50 cursor-pointer transition-colors">
+                    <label key={item.id} className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-blue-50 cursor-pointer transition-colors">
                       <input
                         type="checkbox"
                         checked={formData.specialItems.includes(item.id)}
                         onChange={() => handleSpecialItemToggle(item.id)}
-                        className="w-5 h-5 text-orange-500 rounded border-gray-300 focus:ring-orange-500"
+                        className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                       />
                       <span className="ml-3 text-gray-700 font-medium">{item.label}</span>
                     </label>
                   ))}
-                  <label className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-orange-50 cursor-pointer transition-colors">
+                  <label className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-blue-50 cursor-pointer transition-colors">
                     <input
                       type="checkbox"
                       checked={formData.specialItems.length === 0}
                       onChange={() => handleSpecialItemToggle('none')}
-                      className="w-5 h-5 text-orange-500 rounded border-gray-300 focus:ring-orange-500"
+                      className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                     />
                     <span className="ml-3 text-gray-700 font-medium">None of the above</span>
                   </label>
@@ -356,7 +281,7 @@ export default function EstimatePage() {
 
               {/* More Services */}
               <section className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-orange-500">Special Services</h2>
+                <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 text-blue-600">Special Services</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Disassembly & Assembly Needs</label>
@@ -390,7 +315,7 @@ export default function EstimatePage() {
                   type="button"
                   onClick={calculateQuote}
                   disabled={isCalculating}
-                  className="w-full py-4 bg-orange-500 text-white rounded-xl font-bold text-xl hover:bg-orange-600 transition-all shadow-lg hover:shadow-orange-200 disabled:opacity-50"
+                  className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 disabled:opacity-50"
                 >
                   {isCalculating ? 'Calculating...' : 'Get Instant Quote'}
                 </button>
@@ -401,25 +326,44 @@ export default function EstimatePage() {
           {/* Results Column */}
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
-              <div className="bg-white p-6 rounded-2xl shadow-xl border-2 border-orange-500">
+              <div className="bg-white p-6 rounded-2xl shadow-xl border-2 border-blue-600">
                 <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center justify-between">
                   Your Instant Quote
-                  {isCalculating && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>}
+                  {isCalculating && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>}
                 </h2>
 
                 {quote?.kind === 'instant' && quote.options ? (
                   <div className="space-y-4">
+                    <p className="text-xs text-gray-500 font-bold uppercase mb-2">Select Your Crew Size:</p>
                     {quote.options.map((opt) => (
-                      <div key={opt.moverCount} className="p-4 bg-orange-50 rounded-xl border border-orange-100 hover:border-orange-300 transition-colors">
+                      <div 
+                        key={opt.moverCount} 
+                        onClick={() => setSelectedMoverCount(opt.moverCount)}
+                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                          selectedMoverCount === opt.moverCount 
+                          ? 'bg-blue-600 border-blue-600 text-white shadow-md transform scale-[1.02]' 
+                          : 'bg-blue-50 border-blue-100 text-gray-900 hover:border-blue-300'
+                        }`}
+                      >
                         <div className="flex justify-between items-start mb-2">
-                          <span className="font-bold text-lg text-orange-700">{opt.moverCount} Movers</span>
-                          <span className="text-sm font-semibold text-gray-500">{Math.round(opt.etaMinutesRange.low / 60)}-{Math.round(opt.etaMinutesRange.high / 60)} hrs</span>
+                          <span className={`font-bold text-lg ${selectedMoverCount === opt.moverCount ? 'text-white' : 'text-blue-700'}`}>
+                            {opt.moverCount} Movers
+                          </span>
+                          <span className={`text-sm font-semibold ${selectedMoverCount === opt.moverCount ? 'text-blue-100' : 'text-gray-500'}`}>
+                            {(() => {
+                              const low = Math.round(opt.etaMinutesRange.low / 60)
+                              const high = Math.round(opt.etaMinutesRange.high / 60)
+                              return high <= low ? `${low}-${low + 1}` : `${low}-${high}`
+                            })()} hrs
+                          </span>
                         </div>
-                        <div className="text-2xl font-black text-gray-900">
+                        <div className={`text-2xl font-black ${selectedMoverCount === opt.moverCount ? 'text-white' : 'text-gray-900'}`}>
                           {formatCurrency(opt.priceRange.low * 100)} - {formatCurrency(opt.priceRange.high * 100)}
                         </div>
                         {opt.transportFee > 0 && (
-                          <div className="text-[10px] text-gray-400 mt-1">Includes {formatCurrency(opt.transportFee * 100)} transport fee</div>
+                          <div className={`text-[10px] mt-1 ${selectedMoverCount === opt.moverCount ? 'text-blue-100' : 'text-gray-400'}`}>
+                            Includes {formatCurrency(opt.transportFee * 100)} transport fee
+                          </div>
                         )}
                       </div>
                     ))}

@@ -49,6 +49,15 @@ export default function CheckoutPage() {
 
   const bookingStartUtc = startUtc || estimateData?.startUtc
   const quote = estimateData?.quote
+  const selectedMoverCount = estimateData?.selectedMoverCount || 2
+
+  // Find the selected quote option
+  const selectedOption = useMemo(() => {
+    if (quote?.kind === 'instant' && quote.options) {
+      return quote.options.find((opt: any) => opt.moverCount === selectedMoverCount) || quote.options[0]
+    }
+    return null
+  }, [quote, selectedMoverCount])
 
   // Save startUtc to sessionStorage if it came from URL but isn't in storage yet
   useEffect(() => {
@@ -88,7 +97,7 @@ export default function CheckoutPage() {
       }
 
       // Calculate endUtc based on estimate (default to 4 hours if not in quote)
-      const durationHours = quote.options?.[0]?.etaMinutesRange.high / 60 || 4
+      const durationHours = selectedOption?.etaMinutesRange.high / 60 || 4
       const start = new Date(bookingStartUtc)
       const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000)
 
@@ -100,19 +109,21 @@ export default function CheckoutPage() {
       if (estimateData.additionalStops?.length > 0) {
         detailedNotes += '\n\nAdditional Stops:\n'
         estimateData.additionalStops.forEach((stop: any, i: number) => {
-          detailedNotes += `${i+1}. ${stop.address} (Walk: ${stop.longCarry})\n`
+          detailedNotes += `${i+1}. ${stop.address}\n`
         })
       }
       if (estimateData.specialItems?.length > 0) {
         detailedNotes += '\nSpecial Items: ' + estimateData.specialItems.join(', ')
       }
+      
+      detailedNotes += `\nCrew Size: ${selectedMoverCount} Movers`
 
       const bookingData: any = {
         ...restEstimateData,
         additionalStops: (estimateData.additionalStops?.length || 0) > 0,
         startUtc: bookingStartUtc,
         endUtc: end.toISOString(),
-        requestedTrucks: requestedTrucks || 1,
+        requestedTrucks: estimateData.requestedTrucks || requestedTrucks || 1,
         customerName: customerInfo.customerName,
         customerEmail: customerInfo.customerEmail,
         customerPhone: customerInfo.customerPhone,
@@ -176,9 +187,21 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-bold text-gray-800 border-b pb-2">Move Summary</h2>
                 <div className="text-sm space-y-2">
                   <p><span className="text-gray-500 font-medium">Arrival:</span> <span className="font-bold">{formatDateTime(bookingStartUtc)}</span></p>
+                  {selectedOption && (
+                    <p><span className="text-gray-500 font-medium">Est. Duration:</span> <span className="font-bold">
+                      {(() => {
+                        const low = Math.round(selectedOption.etaMinutesRange.low / 60)
+                        const high = Math.round(selectedOption.etaMinutesRange.high / 60)
+                        return high <= low ? `${low}-${low + 1}` : `${low}-${high}`
+                      })()} hrs
+                    </span></p>
+                  )}
                   <p><span className="text-gray-500 font-medium">From:</span> <span className="font-bold">{estimateData.originAddress}</span></p>
                   <p><span className="text-gray-500 font-medium">To:</span> <span className="font-bold">{estimateData.destinationAddress}</span></p>
                   <p><span className="text-gray-500 font-medium">Type:</span> <span className="font-bold capitalize">{estimateData.moveType}</span></p>
+                  <p><span className="text-gray-500 font-medium">Bedrooms:</span> <span className="font-bold">{estimateData.bedroomsWithMattresses}</span></p>
+                  <p><span className="text-gray-500 font-medium">Boxes:</span> <span className="font-bold">{estimateData.boxCount}</span></p>
+                  <p><span className="text-gray-500 font-medium">Trucks:</span> <span className="font-bold">{estimateData.requestedTrucks || 1}</span></p>
                   {estimateData.additionalStops?.length > 0 && (
                     <p><span className="text-gray-500 font-medium">Extra Stops:</span> <span className="font-bold">{estimateData.additionalStops.length}</span></p>
                   )}
@@ -187,11 +210,17 @@ export default function CheckoutPage() {
 
               <div className="space-y-4">
                 <h2 className="text-xl font-bold text-gray-800 border-b pb-2">Estimated Pricing</h2>
-                {quote.kind === 'instant' && quote.options && (
+                {selectedOption && (
                   <div className="bg-blue-50 p-4 rounded-xl">
-                    <p className="text-xs text-blue-600 uppercase font-bold mb-1">2 Mover Estimate</p>
+                    <p className="text-xs text-blue-600 uppercase font-bold mb-1">
+                      {selectedMoverCount} Mover Estimate ({(() => {
+                        const low = Math.round(selectedOption.etaMinutesRange.low / 60)
+                        const high = Math.round(selectedOption.etaMinutesRange.high / 60)
+                        return high <= low ? `${low}-${low + 1}` : `${low}-${high}`
+                      })()} hrs)
+                    </p>
                     <p className="text-2xl font-black text-blue-900">
-                      {formatCurrency(quote.options[0].priceRange.low * 100)} - {formatCurrency(quote.options[0].priceRange.high * 100)}
+                      {formatCurrency(selectedOption.priceRange.low * 100)} - {formatCurrency(selectedOption.priceRange.high * 100)}
                     </p>
                     <p className="text-[10px] text-blue-500 mt-2 italic">* Total based on actual hours. Transport fee included.</p>
                   </div>
@@ -252,10 +281,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="bg-gray-100 p-6 rounded-xl text-center">
-                  <p className="text-gray-600 mb-2">A <span className="font-bold text-gray-900">$100.00 refundable deposit</span> is required to reserve your slot.</p>
-                  <p className="text-sm text-blue-600 font-semibold mb-4 italic">
-                    Once clicked, your booking will be temporarily reserved for 15 minutes.
-                  </p>
+                  <p className="text-gray-600 mb-4">A <span className="font-bold text-gray-900">$100.00 deposit</span> is required to reserve your slot.</p>
                   <button
                     type="submit"
                     disabled={bookingMutation.isPending}
@@ -267,15 +293,12 @@ export default function CheckoutPage() {
               </form>
             ) : (
               <div className="space-y-6 text-center border-t pt-8 animate-in fade-in">
-                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">Booking Reserved!</h2>
-                <p className="text-blue-600 font-bold bg-blue-50 py-2 px-6 rounded-full inline-block mb-4 border border-blue-100 animate-pulse">
-                  Reserved for 15 minutes
-                </p>
                 {checkoutUrl ? (
                   <div className="space-y-4">
                     <p className="text-gray-600">Redirecting to secure payment...</p>

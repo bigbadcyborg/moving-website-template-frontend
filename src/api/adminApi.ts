@@ -81,6 +81,14 @@ export interface CompanyConfig {
   hourlyRatePerMover2: number
   hourlyRatePerMover3: number
   hourlyRatePerMover4: number
+  truckHourlyRateCents: number
+  baseMinutesPerBedroom: number
+  transportFeeBaseCents: number
+  specialItemPianoFeeCents: number
+  specialItemPoolTableFeeCents: number
+  specialItemSafeFeeCents: number
+  specialItemHeavyFurnitureFeeCents: number
+  specialItemArtworkFeeCents: number
   freeServiceAreaMiles: number
   transportFeePerMileCents: number
   transportFeePerMinuteCents: number
@@ -110,6 +118,14 @@ export interface CompanyConfigUpdate {
   hourlyRatePerMover2?: number
   hourlyRatePerMover3?: number
   hourlyRatePerMover4?: number
+  truckHourlyRateCents?: number
+  baseMinutesPerBedroom?: number
+  transportFeeBaseCents?: number
+  specialItemPianoFeeCents?: number
+  specialItemPoolTableFeeCents?: number
+  specialItemSafeFeeCents?: number
+  specialItemHeavyFurnitureFeeCents?: number
+  specialItemArtworkFeeCents?: number
   freeServiceAreaMiles?: number
   transportFeePerMileCents?: number
   transportFeePerMinuteCents?: number

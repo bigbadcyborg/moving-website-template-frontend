@@ -214,13 +214,20 @@ export default function ConfigPage() {
     bucketMinutes: '',
     maxTrucksPerBooking: '',
     // New Estimation Logic Config
-    minutesPerPoint: '',
     fixedOverheadMinutes: '',
     minBillMinutes: '',
     billIncrementMinutes: '',
     hourlyRatePerMover2: '',
     hourlyRatePerMover3: '',
     hourlyRatePerMover4: '',
+    truckHourlyRate: '',
+    baseMinutesPerBedroom: '',
+    transportFeeBase: '',
+    specialItemPianoFee: '',
+    specialItemPoolTableFee: '',
+    specialItemSafeFee: '',
+    specialItemHeavyFurnitureFee: '',
+    specialItemArtworkFee: '',
     freeServiceAreaMiles: '',
     transportFeePerMile: '',
     transportFeePerMinute: '',
@@ -249,13 +256,20 @@ export default function ConfigPage() {
         bucketMinutes: config.bucketMinutes.toString(),
         maxTrucksPerBooking: config.maxTrucksPerBooking ? config.maxTrucksPerBooking.toString() : '',
         // New Estimation Logic Config
-        minutesPerPoint: config.minutesPerPoint.toString(),
         fixedOverheadMinutes: config.fixedOverheadMinutes.toString(),
         minBillMinutes: config.minBillMinutes.toString(),
         billIncrementMinutes: config.billIncrementMinutes.toString(),
         hourlyRatePerMover2: toDollarsStr(config.hourlyRatePerMover2),
         hourlyRatePerMover3: toDollarsStr(config.hourlyRatePerMover3),
         hourlyRatePerMover4: toDollarsStr(config.hourlyRatePerMover4),
+        truckHourlyRate: toDollarsStr(config.truckHourlyRateCents),
+        baseMinutesPerBedroom: config.baseMinutesPerBedroom.toString(),
+        transportFeeBase: toDollarsStr(config.transportFeeBaseCents),
+        specialItemPianoFee: toDollarsStr(config.specialItemPianoFeeCents),
+        specialItemPoolTableFee: toDollarsStr(config.specialItemPoolTableFeeCents),
+        specialItemSafeFee: toDollarsStr(config.specialItemSafeFeeCents),
+        specialItemHeavyFurnitureFee: toDollarsStr(config.specialItemHeavyFurnitureFeeCents),
+        specialItemArtworkFee: toDollarsStr(config.specialItemArtworkFeeCents),
         freeServiceAreaMiles: config.freeServiceAreaMiles.toString(),
         transportFeePerMile: toDollarsStr(config.transportFeePerMileCents),
         transportFeePerMinute: toDollarsStr(config.transportFeePerMinuteCents),
@@ -285,13 +299,20 @@ export default function ConfigPage() {
       bucketMinutes: parseInt(formData.bucketMinutes),
       maxTrucksPerBooking: formData.maxTrucksPerBooking ? parseInt(formData.maxTrucksPerBooking) : null,
       // New Estimation Logic Config
-      minutesPerPoint: parseFloat(formData.minutesPerPoint),
       fixedOverheadMinutes: parseInt(formData.fixedOverheadMinutes),
       minBillMinutes: parseInt(formData.minBillMinutes),
       billIncrementMinutes: parseInt(formData.billIncrementMinutes),
       hourlyRatePerMover2: dollarsToCents(parseFloat(formData.hourlyRatePerMover2)),
       hourlyRatePerMover3: dollarsToCents(parseFloat(formData.hourlyRatePerMover3)),
       hourlyRatePerMover4: dollarsToCents(parseFloat(formData.hourlyRatePerMover4)),
+      truckHourlyRateCents: dollarsToCents(parseFloat(formData.truckHourlyRate)),
+      baseMinutesPerBedroom: parseInt(formData.baseMinutesPerBedroom),
+      transportFeeBaseCents: dollarsToCents(parseFloat(formData.transportFeeBase)),
+      specialItemPianoFeeCents: dollarsToCents(parseFloat(formData.specialItemPianoFee)),
+      specialItemPoolTableFeeCents: dollarsToCents(parseFloat(formData.specialItemPoolTableFee)),
+      specialItemSafeFeeCents: dollarsToCents(parseFloat(formData.specialItemSafeFee)),
+      specialItemHeavyFurnitureFeeCents: dollarsToCents(parseFloat(formData.specialItemHeavyFurnitureFee)),
+      specialItemArtworkFeeCents: dollarsToCents(parseFloat(formData.specialItemArtworkFee)),
       freeServiceAreaMiles: parseInt(formData.freeServiceAreaMiles),
       transportFeePerMileCents: dollarsToCents(parseFloat(formData.transportFeePerMile)),
       transportFeePerMinuteCents: dollarsToCents(parseFloat(formData.transportFeePerMinute)),
@@ -626,7 +647,7 @@ export default function ConfigPage() {
                 <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Mover Hourly Rates</h3>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Rate for 2 Movers (Total $/hr)</label>
+                <label className="block text-sm font-medium mb-1">Rate per Mover for 2 Movers ($/hr)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
@@ -637,9 +658,10 @@ export default function ConfigPage() {
                     className="w-full pl-7 pr-3 py-2 border rounded"
                   />
                 </div>
+                <p className="text-[10px] text-gray-500 mt-1 italic">Total crew + 1 truck: ${(((parseFloat(formData.hourlyRatePerMover2) || 0) * 2) + (parseFloat(formData.truckHourlyRate) || 0)).toFixed(2)}/hr</p>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Rate for 3 Movers (Total $/hr)</label>
+                <label className="block text-sm font-medium mb-1">Rate per Mover for 3 Movers ($/hr)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
@@ -650,9 +672,10 @@ export default function ConfigPage() {
                     className="w-full pl-7 pr-3 py-2 border rounded"
                   />
                 </div>
+                <p className="text-[10px] text-gray-500 mt-1 italic">Total crew + 1 truck: ${(((parseFloat(formData.hourlyRatePerMover3) || 0) * 3) + (parseFloat(formData.truckHourlyRate) || 0)).toFixed(2)}/hr</p>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Rate for 4 Movers (Total $/hr)</label>
+                <label className="block text-sm font-medium mb-1">Rate per Mover for 4 Movers ($/hr)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
@@ -662,6 +685,136 @@ export default function ConfigPage() {
                     onChange={(e) => setFormData({ ...formData, hourlyRatePerMover4: e.target.value })}
                     className="w-full pl-7 pr-3 py-2 border rounded"
                   />
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1 italic">Total crew + 1 truck: ${(((parseFloat(formData.hourlyRatePerMover4) || 0) * 4) + (parseFloat(formData.truckHourlyRate) || 0)).toFixed(2)}/hr</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Truck Hourly Rate ($/hr)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.truckHourlyRate}
+                    onChange={(e) => setFormData({ ...formData, truckHourlyRate: e.target.value })}
+                    className="w-full pl-7 pr-3 py-2 border rounded"
+                  />
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1 italic">Flat rate added per truck requested</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Minutes per Bedroom</label>
+                <input
+                  type="number"
+                  value={formData.baseMinutesPerBedroom}
+                  onChange={(e) => setFormData({ ...formData, baseMinutesPerBedroom: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <p className="text-[10px] text-gray-500 mt-1 italic">Time added to the move per bedroom</p>
+              </div>
+
+              <div className="md:col-span-2 pt-4 border-t">
+                <h3 className="text-lg font-bold mb-4">Trip Fee Settings</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Trip Fee Base Minimum ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.transportFeeBase}
+                        onChange={(e) => setFormData({ ...formData, transportFeeBase: e.target.value })}
+                        className="w-full pl-7 pr-3 py-2 border rounded"
+                      />
+                    </div>
+                    <p className="text-[10px] text-gray-500 mt-1 italic">Fixed fee applied to every move</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Trip Fee per Mile ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.transportFeePerMile}
+                        onChange={(e) => setFormData({ ...formData, transportFeePerMile: e.target.value })}
+                        className="w-full pl-7 pr-3 py-2 border rounded"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2 pt-4 border-t">
+                <h3 className="text-lg font-bold mb-4">Special Item Flat Fees</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Piano Fee ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.specialItemPianoFee}
+                        onChange={(e) => setFormData({ ...formData, specialItemPianoFee: e.target.value })}
+                        className="w-full pl-7 pr-3 py-2 border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Pool Table Fee ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.specialItemPoolTableFee}
+                        onChange={(e) => setFormData({ ...formData, specialItemPoolTableFee: e.target.value })}
+                        className="w-full pl-7 pr-3 py-2 border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Safe Fee ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.specialItemSafeFee}
+                        onChange={(e) => setFormData({ ...formData, specialItemSafeFee: e.target.value })}
+                        className="w-full pl-7 pr-3 py-2 border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Heavy Furniture Fee ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.specialItemHeavyFurnitureFee}
+                        onChange={(e) => setFormData({ ...formData, specialItemHeavyFurnitureFee: e.target.value })}
+                        className="w-full pl-7 pr-3 py-2 border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Artwork Fee ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.specialItemArtworkFee}
+                        onChange={(e) => setFormData({ ...formData, specialItemArtworkFee: e.target.value })}
+                        className="w-full pl-7 pr-3 py-2 border rounded"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -708,17 +861,15 @@ export default function ConfigPage() {
                 <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Calculation Factors</h3>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Minutes Per Inventory Point</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.minutesPerPoint}
-                  onChange={(e) => setFormData({ ...formData, minutesPerPoint: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Fixed Overhead (Minutes)</label>
+                <label className="flex items-center text-sm font-medium mb-1">
+                  Fixed Overhead (Minutes)
+                  <span 
+                    className="ml-1.5 inline-flex items-center justify-center w-4 h-4 bg-gray-200 text-gray-500 rounded-full text-[10px] cursor-help"
+                    title="Base time added to every move for setup, walkthrough, equipment prep, and final wrap-up."
+                  >
+                    ?
+                  </span>
+                </label>
                 <input
                   type="number"
                   value={formData.fixedOverheadMinutes}
@@ -727,7 +878,15 @@ export default function ConfigPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Minimum Bill (Minutes)</label>
+                <label className="flex items-center text-sm font-medium mb-1">
+                  Minimum Bill (Minutes)
+                  <span 
+                    className="ml-1.5 inline-flex items-center justify-center w-4 h-4 bg-gray-200 text-gray-500 rounded-full text-[10px] cursor-help"
+                    title="The minimum amount of time that will be billed for any job, ensuring small moves are still profitable."
+                  >
+                    ?
+                  </span>
+                </label>
                 <input
                   type="number"
                   value={formData.minBillMinutes}

@@ -144,6 +144,7 @@ export interface QuoteInput {
   specialItems: string[]
   disassemblyNeeds: 'none' | 'some' | 'many'
   packingService: 'none' | 'partial' | 'full'
+  requestedTrucks: number
 }
 
 export interface QuoteOption {

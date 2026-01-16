@@ -19,12 +19,20 @@ export default function BookingSuccessPage() {
     }
   }, [])
 
+  const selectedMoverCount = details?.selectedMoverCount || 2
+  const selectedOption = useMemo(() => {
+    if (details?.quote?.kind === 'instant' && details.quote.options) {
+      return details.quote.options.find((opt: any) => opt.moverCount === selectedMoverCount) || details.quote.options[0]
+    }
+    return null
+  }, [details, selectedMoverCount])
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full space-y-8 bg-white p-8 md:p-10 rounded-2xl shadow-xl">
+      <div className="max-w-2xl w-full space-y-8 bg-white p-8 md:p-10 rounded-2xl shadow-xl text-center">
         <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6 border-4 border-white shadow-md">
-            <svg className="h-12 w-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 mb-6 border-4 border-white shadow-md">
+            <svg className="h-12 w-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -56,12 +64,10 @@ export default function BookingSuccessPage() {
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">From</label>
                   <p className="text-sm font-semibold text-gray-700">{details.originAddress}</p>
-                  <p className="text-[10px] text-blue-500 mt-0.5 capitalize">Walk: {details.originLongCarry}</p>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">To</label>
                   <p className="text-sm font-semibold text-gray-700">{details.destinationAddress}</p>
-                  <p className="text-[10px] text-blue-500 mt-0.5 capitalize">Walk: {details.destinationLongCarry}</p>
                 </div>
                 {details.additionalStops?.length > 0 && (
                   <div className="pt-2">
@@ -70,7 +76,7 @@ export default function BookingSuccessPage() {
                       {details.additionalStops.map((stop: any, i: number) => (
                         <div key={i} className="text-[11px] font-semibold text-gray-600 flex items-start">
                           <span className="text-blue-500 mr-1">•</span>
-                          <span>{stop.address} <span className="text-[9px] text-gray-400 font-normal">(Walk: {stop.longCarry})</span></span>
+                          <span>{stop.address}</span>
                         </div>
                       ))}
                     </div>
@@ -98,7 +104,7 @@ export default function BookingSuccessPage() {
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Special Items/Services</label>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {details.specialItems?.map((item: string) => (
-                        <span key={item} className="px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-md capitalize">{item}</span>
+                        <span key={item} className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-md capitalize">{item}</span>
                       ))}
                       {details.disassemblyNeeds !== 'none' && (
                         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-md capitalize">Assembly: {details.disassemblyNeeds}</span>
@@ -109,14 +115,14 @@ export default function BookingSuccessPage() {
               </div>
             </div>
 
-            {details.quote?.kind === 'instant' && details.quote.options && (
+            {selectedOption && (
               <div className="bg-blue-600 p-6 rounded-2xl shadow-lg text-white">
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="text-sm font-bold uppercase tracking-widest opacity-80">Estimated Price Range</h4>
-                  <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/30">2 Mover Rate</span>
+                  <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/30">{selectedMoverCount} Mover Rate</span>
                 </div>
                 <div className="text-3xl font-black">
-                  {formatCurrency(details.quote.options[0].priceRange.low * 100)} - {formatCurrency(details.quote.options[0].priceRange.high * 100)}
+                  {formatCurrency(selectedOption.priceRange.low * 100)} - {formatCurrency(selectedOption.priceRange.high * 100)}
                 </div>
                 <p className="text-[10px] mt-2 opacity-75 italic">* Final price is based on actual hours worked. Includes transport fees.</p>
               </div>

@@ -56,6 +56,11 @@ export default function CreateBookingPage() {
     const estimate = stored ? JSON.parse(stored) : null
     return estimate?.quote || null
   })
+  const selectedMoverCount = useMemo(() => {
+    const stored = sessionStorage.getItem('estimateData')
+    const estimate = stored ? JSON.parse(stored) : null
+    return estimate?.selectedMoverCount || 2
+  }, [])
   const [isCalculating, setIsCalculating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -178,7 +183,7 @@ export default function CreateBookingPage() {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Customer Information */}
         <section className="bg-white p-6 rounded-lg shadow space-y-4">
-          <h2 className="text-xl font-bold text-gray-800 border-b pb-2 text-orange-500">Your Information</h2>
+          <h2 className="text-xl font-bold text-gray-800 border-b pb-2 text-blue-600">Your Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
@@ -215,7 +220,7 @@ export default function CreateBookingPage() {
 
         {/* Address Information */}
         <section className="bg-white p-6 rounded-lg shadow space-y-6">
-          <h2 className="text-xl font-bold text-gray-800 border-b pb-2 text-orange-500">Address Information</h2>
+          <h2 className="text-xl font-bold text-gray-800 border-b pb-2 text-blue-600">Address Information</h2>
           
           <div className="space-y-4">
             <div>
@@ -276,38 +281,38 @@ export default function CreateBookingPage() {
               <button 
                 type="button" 
                 onClick={handleAddStop}
-                className="text-sm bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-bold hover:bg-orange-200"
+                className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold hover:bg-blue-200"
               >
                 + Add Stop
               </button>
             </div>
             
             {formData.additionalStops.map((stop, index) => (
-              <div key={index} className="p-4 bg-orange-50 rounded-xl border border-orange-100 space-y-4 relative">
+              <div key={index} className="p-4 bg-blue-50 rounded-xl border border-blue-100 space-y-4 relative">
                 <button 
                   type="button" 
                   onClick={() => handleRemoveStop(index)}
-                  className="absolute top-2 right-2 text-orange-400 hover:text-orange-600"
+                  className="absolute top-2 right-2 text-blue-400 hover:text-blue-600"
                 >
                   ✕
                 </button>
                 <div>
-                  <label className="block text-xs font-bold text-orange-600 uppercase mb-1">Stop {index + 1} Address</label>
+                  <label className="block text-xs font-bold text-blue-600 uppercase mb-1">Stop {index + 1} Address</label>
                   <input
                     type="text"
                     value={stop.address}
                     onChange={(e) => handleStopChange(index, 'address', e.target.value)}
-                    className="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                    className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     placeholder="Street, City, State, ZIP"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-orange-600 uppercase mb-1">Walking Distance (Stop {index + 1})</label>
+                  <label className="block text-xs font-bold text-blue-600 uppercase mb-1">Walking Distance (Stop {index + 1})</label>
                   <select
                     value={stop.longCarry}
                     onChange={(e) => handleStopChange(index, 'longCarry', e.target.value as any)}
-                    className="w-full px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                    className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="normal">Normal (under 75ft)</option>
                     <option value="long">Long (75-150ft)</option>
@@ -321,7 +326,7 @@ export default function CreateBookingPage() {
 
         {/* Inventory & Logistics */}
         <section className="bg-white p-6 rounded-lg shadow space-y-6">
-          <h2 className="text-xl font-bold text-gray-800 border-b pb-2 text-orange-500">Inventory & Logistics</h2>
+          <h2 className="text-xl font-bold text-gray-800 border-b pb-2 text-blue-600">Inventory & Logistics</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Property Type</label>
@@ -416,25 +421,25 @@ export default function CreateBookingPage() {
 
         {/* Special Items */}
         <section className="bg-white p-6 rounded-lg shadow space-y-6">
-          <h2 className="text-xl font-bold text-gray-800 border-b pb-2 text-orange-500">Special Items</h2>
+          <h2 className="text-xl font-bold text-gray-800 border-b pb-2 text-blue-600">Special Items</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {specialItemsList.map(item => (
-              <label key={item.id} className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-orange-50 cursor-pointer transition-colors">
+              <label key={item.id} className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-blue-50 cursor-pointer transition-colors">
                 <input
                   type="checkbox"
                   checked={formData.specialItems.includes(item.id)}
                   onChange={() => handleSpecialItemToggle(item.id)}
-                  className="w-5 h-5 text-orange-500 rounded border-gray-300 focus:ring-orange-500"
+                  className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                 />
                 <span className="ml-3 text-gray-700 font-medium">{item.label}</span>
               </label>
             ))}
-            <label className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-orange-50 cursor-pointer transition-colors">
+            <label className="flex items-center p-3 border border-gray-200 rounded-xl hover:bg-blue-50 cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={formData.specialItems.length === 0}
                 onChange={() => handleSpecialItemToggle('none')}
-                className="w-5 h-5 text-orange-500 rounded border-gray-300 focus:ring-orange-500"
+                className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
               />
               <span className="ml-3 text-gray-700 font-medium">None of the above</span>
             </label>
@@ -446,7 +451,7 @@ export default function CreateBookingPage() {
             type="button"
             onClick={calculateQuote}
             disabled={isCalculating}
-            className="px-8 py-3 bg-orange-500 text-white rounded-xl font-bold text-lg hover:bg-orange-600 transition-all shadow-lg hover:shadow-orange-200 disabled:opacity-50"
+            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 disabled:opacity-50"
           >
             {isCalculating ? 'Calculating...' : 'Get Instant Quote'}
           </button>
@@ -462,9 +467,9 @@ export default function CreateBookingPage() {
             </div>
           ) : quote?.kind === 'instant' ? (
             <div className="space-y-4">
-              <p className="text-sm opacity-90">Based on your details, here is the estimated range for 2 movers:</p>
+              <p className="text-sm opacity-90">Based on your details, here is the estimated range for {selectedMoverCount} movers:</p>
               <div className="text-3xl font-black">
-                {formatCurrency(quote.options![0].priceRange.low * 100)} - {formatCurrency(quote.options![0].priceRange.high * 100)}
+                {formatCurrency((quote.options?.find(o => o.moverCount === selectedMoverCount)?.priceRange.low || quote.options![0].priceRange.low) * 100)} - {formatCurrency((quote.options?.find(o => o.moverCount === selectedMoverCount)?.priceRange.high || quote.options![0].priceRange.high) * 100)}
               </div>
               <p className="text-xs opacity-75">* Final price depends on actual time worked. Includes transport fees.</p>
             </div>
